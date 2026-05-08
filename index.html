@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🔥 Wizard's Quest - 2D Platformer</title>
+    <title>🔥 Wizard vs Demons - 2D Platformer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=MedievalSharp&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #1a1a2e;
@@ -20,7 +21,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            height: 100dvh; 
+            width: 100vw;
             font-family: 'Segoe UI', 'Press Start 2P', system-ui, sans-serif;
             overflow: hidden;
             user-select: none;
@@ -37,6 +39,8 @@
             align-items: center;
             gap: 10px;
             width: 100%;
+            height: 100%;
+            justify-content: center;
         }
 
         #game-container {
@@ -51,12 +55,16 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            max-width: 100%;
+            max-height: 100%;
         }
 
         canvas {
             display: block;
             border-radius: 9px;
             image-rendering: auto;
+            max-width: 100%;
+            max-height: 100%;
         }
 
         #instructions {
@@ -83,29 +91,11 @@
             letter-spacing: 1px;
         }
 
-        #instructions span.key.fire {
-            color: #ff9f43;
-            border-color: #c06020;
-            background: #2a1f15;
-        }
-        
-        #instructions span.key.lightning {
-            color: #00ffff;
-            border-color: #008888;
-            background: #152a2a;
-        }
-
-        #instructions span.key.teleport {
-            color: #d400ff;
-            border-color: #8800aa;
-            background: #200030;
-        }
-
-        #instructions span.key.summon {
-            color: #4d9e5b;
-            border-color: #2b7b3d;
-            background: #1f3a24;
-        }
+        #instructions span.key.fire { color: #ff9f43; border-color: #c06020; background: #2a1f15; }
+        #instructions span.key.lightning { color: #00ffff; border-color: #008888; background: #152a2a; }
+        #instructions span.key.teleport { color: #d400ff; border-color: #8800aa; background: #200030; }
+        #instructions span.key.summon { color: #4d9e5b; border-color: #2b7b3d; background: #1f3a24; }
+        #instructions span.key.time { color: #aab8c2; border-color: #556677; background: #1a202c; }
 
         .pulse-anim {
             animation: pulse-key 1.5s ease-in-out infinite;
@@ -116,16 +106,16 @@
             50% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.6); }
         }
 
-        /* Mobile specific styles */
         #mobile-controls {
             display: none;
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
+            bottom: 5%; 
+            left: 5%;
+            right: 5%;
             justify-content: space-between;
             pointer-events: none;
             z-index: 10;
+            padding-bottom: env(safe-area-inset-bottom, 10px);
         }
 
         .mob-panel {
@@ -139,12 +129,12 @@
             border: 2px solid rgba(120, 100, 180, 0.5);
             color: rgba(255, 255, 255, 0.8);
             border-radius: 50%;
-            width: 60px;
-            height: 60px;
+            width: clamp(40px, 11vw, 60px);
+            height: clamp(40px, 11vw, 60px);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 26px;
+            font-size: clamp(16px, 5.5vw, 26px);
             transition: all 0.1s;
         }
 
@@ -155,51 +145,29 @@
             color: #fff;
         }
         
-        .mob-btn.lightning {
-            border-color: rgba(0, 255, 255, 0.5);
-            color: rgba(0, 255, 255, 0.8);
-            display: none;
-        }
-        
-        .mob-btn.lightning:active, .mob-btn.lightning.active {
-            background: rgba(0, 255, 255, 0.5);
-            border-color: rgba(0, 255, 255, 0.9);
-            color: #fff;
-        }
+        .mob-btn.lightning { border-color: rgba(0, 255, 255, 0.5); color: rgba(0, 255, 255, 0.8); display: none; }
+        .mob-btn.lightning:active, .mob-btn.lightning.active { background: rgba(0, 255, 255, 0.5); border-color: rgba(0, 255, 255, 0.9); color: #fff; }
 
-        .mob-btn.teleport {
-            border-color: rgba(170, 0, 255, 0.5);
-            color: rgba(170, 0, 255, 0.8);
-            display: none; 
-        }
+        .mob-btn.teleport { border-color: rgba(170, 0, 255, 0.5); color: rgba(170, 0, 255, 0.8); display: none;  }
+        .mob-btn.teleport:active, .mob-btn.teleport.active { background: rgba(170, 0, 255, 0.5); border-color: rgba(170, 0, 255, 0.9); color: #fff; }
 
-        .mob-btn.teleport:active, .mob-btn.teleport.active {
-            background: rgba(170, 0, 255, 0.5);
-            border-color: rgba(170, 0, 255, 0.9);
-            color: #fff;
-        }
+        .mob-btn.summon { border-color: rgba(77, 158, 91, 0.5); color: rgba(77, 158, 91, 0.8); display: none; }
+        .mob-btn.summon:active, .mob-btn.summon.active { background: rgba(77, 158, 91, 0.5); border-color: rgba(77, 158, 91, 0.9); color: #fff; }
 
-        .mob-btn.summon {
-            border-color: rgba(77, 158, 91, 0.5);
-            color: rgba(77, 158, 91, 0.8);
-            display: none; 
-        }
-
-        .mob-btn.summon:active, .mob-btn.summon.active {
-            background: rgba(77, 158, 91, 0.5);
-            border-color: rgba(77, 158, 91, 0.9);
-            color: #fff;
-        }
+        .mob-btn.time { border-color: rgba(170, 184, 194, 0.5); color: rgba(170, 184, 194, 0.8); display: none; }
+        .mob-btn.time:active, .mob-btn.time.active { background: rgba(170, 184, 194, 0.5); border-color: rgba(170, 184, 194, 0.9); color: #fff; }
 
         body.mobile-mode { gap: 0; }
-        body.mobile-mode #game-container { border: none; border-radius: 0; width: 100vw; height: 100vh; }
+        body.mobile-mode #game-container { border: none; border-radius: 0; width: 100vw; height: 100dvh; }
         body.mobile-mode canvas { border-radius: 0; }
 
-        /* Estilos da Tela de História e Menu */
+        /* Medieval Menu Redesign */
         .overlay-screen {
             position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(26, 26, 46, 0.95);
+            top: 0; left: 0; width: 100vw; height: 100dvh;
+            background: rgba(20, 15, 10, 0.95);
+            background-image: radial-gradient(circle, rgba(40,30,20,0.95) 0%, rgba(10,5,5,0.98) 100%);
+            border: inset 5px #8b6914;
             z-index: 9999;
             display: flex;
             flex-direction: column;
@@ -209,46 +177,65 @@
             padding: 20px;
         }
 
+        .overlay-screen::before {
+            content: "";
+            position: absolute;
+            top: 15px; left: 15px; right: 15px; bottom: 15px;
+            border: 2px solid #5c4008;
+            pointer-events: none;
+        }
+
         .overlay-screen h1 {
-            color: #ff4444;
-            font-size: 32px;
+            font-family: 'MedievalSharp', 'Cinzel', serif;
+            color: #ffd700;
+            font-size: clamp(32px, 7vw, 60px);
             margin-bottom: 20px;
-            text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+            text-shadow: 2px 2px 4px #000, 0 0 15px #ff4400;
+            letter-spacing: 2px;
         }
 
         .overlay-screen p {
-            color: #e0d4ff;
-            font-size: 18px;
+            font-family: 'Georgia', serif;
+            color: #e8d0aa;
+            font-size: clamp(14px, 3.5vw, 20px);
             max-width: 600px;
             line-height: 1.6;
             margin-bottom: 40px;
+            text-shadow: 1px 1px 2px #000;
+            padding: 0 10px;
         }
 
         .menu-btn {
             padding: 15px 30px;
-            font-size: 18px;
-            background: #ff9f43;
-            color: white;
-            border: 2px solid #c06020;
-            border-radius: 8px;
+            font-size: clamp(16px, 4vw, 20px);
+            font-family: 'Cinzel', serif;
+            font-weight: 800;
+            background: linear-gradient(to bottom, #b8860b, #6b4200);
+            color: #fff;
+            border: 2px solid #ffd700;
+            border-radius: 4px;
             cursor: pointer;
-            font-family: inherit;
-            font-weight: bold;
-            transition: transform 0.1s, background 0.2s;
+            transition: all 0.2s;
             margin: 10px;
             min-width: 250px;
+            text-shadow: 1px 1px 3px #000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+            letter-spacing: 1px;
+            z-index: 10000;
         }
 
-        .menu-btn:hover { background: #ffaa00; }
+        .menu-btn:hover { 
+            background: linear-gradient(to bottom, #daa520, #8b5a00); 
+            box-shadow: 0 6px 15px rgba(255, 215, 0, 0.2); 
+        }
         .menu-btn:active { transform: scale(0.95); }
         
         .menu-btn.dev-btn {
-            background: #4a3f6b;
-            border-color: #2a2540;
+            background: linear-gradient(to bottom, #4a3f6b, #2a2540);
+            border-color: #7850c8;
         }
-        .menu-btn.dev-btn:hover { background: #5a4f7a; }
+        .menu-btn.dev-btn:hover { background: linear-gradient(to bottom, #6a5ca8, #3b3359); }
 
-        /* Estilo do Painel de Desenvolvedor In-Game */
         #dev-panel {
             display: none;
             position: absolute;
@@ -256,17 +243,21 @@
             right: 10px;
             background: rgba(0, 0, 0, 0.8);
             border: 2px solid #00ffff;
-            padding: 15px;
+            padding: 10px 15px;
             border-radius: 8px;
             z-index: 1000;
             color: white;
             flex-direction: column;
-            gap: 10px;
             font-family: system-ui, sans-serif;
             font-size: 12px;
+            min-width: 200px;
         }
         
-        #dev-panel h3 { margin: 0 0 5px 0; color: #00ffff; font-family: 'Press Start 2P', system-ui; font-size: 10px;}
+        #dev-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding-bottom: 5px; }
+        #dev-header.border-active { border-bottom: 1px solid #4a3f6b; margin-bottom: 10px; }
+        #dev-header h3 { margin: 0; color: #00ffff; font-family: 'Press Start 2P', system-ui; font-size: 10px;}
+        #dev-toggle-icon { font-size: 14px; }
+        #dev-content { display: flex; flex-direction: column; gap: 10px; }
         #dev-panel input, #dev-panel select { background: #2a2540; color: white; border: 1px solid #4a3f6b; padding: 5px; border-radius: 4px; width: 100%;}
         #dev-panel button { background: #00ffff; color: #000; font-weight: bold; border: none; padding: 8px; cursor: pointer; border-radius: 4px;}
         #dev-panel button:active { transform: scale(0.95); }
@@ -276,7 +267,7 @@
 <body>
 
     <div id="main-menu" class="overlay-screen">
-        <h1>🔥 Wizard's Quest</h1>
+        <h1>🔥 Wizard vs Demons</h1>
         <button class="menu-btn" id="btn-new-game">Start New Game</button>
         <button class="menu-btn dev-btn" id="btn-dev-menu">Developer Mode</button>
     </div>
@@ -284,15 +275,25 @@
     <div id="story-overlay" class="overlay-screen" style="display:none;">
         <h1>The Demon Invasion</h1>
         <p>
-            The demons are invading the humans realm, the main wizard protector Yakus and his disciples are the only ones who can defeat all of them, and discover why and how they came here.
+            The demons are invading the human realm. The main wizard protector Yakus and his disciples are the only ones who can defeat all of them, and discover why and how they came here.
         </p>
         <button class="menu-btn" id="btn-start">Start Mission</button>
     </div>
     
     <div id="level20-overlay" class="overlay-screen" style="display:none;">
-        <h1 style="color: #ff0000;">The Betrayal</h1>
-        <p>So who caused this invasion was one of us...</p>
-        <button class="menu-btn" id="btn-start-level20" style="background: #aa0000; border-color: #550000;">Face the Traitor</button>
+        <h1 style="color: #ff4444; text-shadow: 2px 2px 4px #000, 0 0 15px #ff0000;">The Betrayal</h1>
+        <p>So the one who caused this invasion was one of us...</p>
+        <button class="menu-btn" id="btn-start-level20" style="background: linear-gradient(to bottom, #aa0000, #550000); border-color: #ff4444;">Face the Traitor</button>
+    </div>
+
+    <!-- Power Unlock Overlay -->
+    <div id="power-info-overlay" class="overlay-screen" style="display:none; z-index: 10001;">
+        <h1 id="power-info-title" style="color: #00ffff; text-shadow: 0 0 10px #00aaff;">Power Unlocked!</h1>
+        <div id="power-info-icon" style="font-size: clamp(60px, 15vw, 100px); margin: 10px; text-shadow: 0 0 20px #fff;">⚡</div>
+        <p id="power-info-desc" style="font-size: clamp(14px, 4vw, 22px); color: #fff; max-width: 700px; line-height: 1.8; text-shadow: none;">
+            Description goes here.
+        </p>
+        <button class="menu-btn" id="btn-close-power">Continue Journey</button>
     </div>
 
     <div id="game-wrapper">
@@ -300,24 +301,29 @@
             <canvas id="game"></canvas>
             
             <div id="dev-panel">
-                <h3>⚙️ Dev Menu</h3>
-                <div style="border-bottom: 1px solid #4a3f6b; margin-bottom: 5px; padding-bottom: 5px;">
-                    <button id="btn-dev-killall" style="width: 100%; margin-bottom: 5px; background: #ff4444; color: white; border-color: #aa0000;">Kill All Entities</button>
-                    <button id="btn-dev-freeze" style="width: 100%; background: #00ffff; color: black; border-color: #008888;">Freeze Time</button>
+                <div id="dev-header" class="border-active">
+                    <h3>⚙️ Dev Menu</h3>
+                    <span id="dev-toggle-icon">▼</span>
                 </div>
-                <label>NPC HP: <input type="number" id="dev-hp" value="7" min="1"></label>
-                <label>NPC Type: 
-                    <select id="dev-type">
-                        <option value="demon">Regular Demon</option>
-                        <option value="boss">King Demon (Boss)</option>
-                        <option value="helper">Helper Wizard</option>
-                        <option value="red_boss">Red Wizard (Boss)</option>
-                        <option value="corrupted_helper">Brown Wizard</option>
-                    </select>
-                </label>
-                <label><input type="checkbox" id="dev-progression" checked style="width: auto;"> Auto Level Up</label>
-                <label>Power Mult: <input type="number" id="dev-power" value="1" min="1" max="10000"></label>
-                <button id="btn-spawn">Spawn Entity</button>
+                <div id="dev-content">
+                    <div style="border-bottom: 1px solid #4a3f6b; margin-bottom: 5px; padding-bottom: 5px;">
+                        <button id="btn-dev-killall" style="width: 100%; margin-bottom: 5px; background: #ff4444; color: white; border-color: #aa0000;">Kill All Entities</button>
+                        <button id="btn-dev-freeze" style="width: 100%; background: #00ffff; color: black; border-color: #008888;">Freeze Time</button>
+                    </div>
+                    <label>NPC HP (Base): <input type="number" id="dev-hp" value="140" min="1"></label>
+                    <label>NPC Type: 
+                        <select id="dev-type">
+                            <option value="demon">Regular Demon</option>
+                            <option value="boss">King Demon (Boss)</option>
+                            <option value="helper">Helper Wizard</option>
+                            <option value="red_boss">Red Wizard (Boss)</option>
+                            <option value="corrupted_helper">Brown Wizard</option>
+                        </select>
+                    </label>
+                    <label><input type="checkbox" id="dev-progression" checked style="width: auto;"> Auto Level Up</label>
+                    <label>Power Mult: <input type="number" id="dev-power" value="1" min="1" max="10000"></label>
+                    <button id="btn-spawn">Spawn Entity</button>
+                </div>
             </div>
 
             <div id="mobile-controls">
@@ -326,6 +332,7 @@
                     <div class="mob-btn" id="btn-right">▶</div>
                 </div>
                 <div class="mob-panel">
+                    <div class="mob-btn time pulse-anim" id="btn-time">⏳</div>
                     <div class="mob-btn summon pulse-anim" id="btn-summon">🪄</div>
                     <div class="mob-btn teleport pulse-anim" id="btn-teleport">🌀</div>
                     <div class="mob-btn lightning pulse-anim" id="btn-lightning">⚡</div>
@@ -347,6 +354,9 @@
             </span>
             <span id="inst-summon-wrapper" style="display:none;">
                 &nbsp;|&nbsp; <span class="key summon pulse-anim">HOLD R</span> Summon
+            </span>
+            <span id="inst-time-wrapper" style="display:none;">
+                &nbsp;|&nbsp; <span class="key time pulse-anim">HOLD C</span> Time Freeze
             </span>
         </div>
     </div>
@@ -386,9 +396,10 @@
 
             function resizeCanvas() {
                 if (isMobileDevice) {
-                    canvas.style.width = '100vw';
-                    canvas.style.height = '100vh';
+                    canvas.style.width = window.innerWidth + 'px';
+                    canvas.style.height = window.innerHeight + 'px';
                     canvas.style.objectFit = 'contain';
+                    document.body.style.height = window.innerHeight + 'px'; 
                 } else {
                     const maxWidth = Math.min(window.innerWidth - 20, 960);
                     const scale = maxWidth / GAME_WIDTH;
@@ -456,46 +467,66 @@
                 setTimeout(() => playBeep(550, 0.2, 'triangle', 0.06, 400), 50);
             }
 
-            function sfxFireCharge(frames) {
-                playBeep(100 + (frames%10)*10, 0.1, 'square', 0.02, -20);
-            }
+            function sfxFireCharge(frames) { playBeep(100 + (frames%10)*10, 0.1, 'square', 0.02, -20); }
             function sfxFireShoot(mult) {
                 if (mult >= 3.0) { playBeep(200, 0.4, 'square', 0.08, -150); playBeep(100, 0.5, 'sawtooth', 0.08, -80); }
                 else { playBeep(400, 0.1, 'square', 0.05, -200); }
             }
 
-            function sfxLightningCharge(frames) {
-                playBeep(800 + Math.random()*400, 0.05, 'sawtooth', 0.03);
-            }
+            function sfxLightningCharge(frames) { playBeep(800 + Math.random()*400, 0.05, 'sawtooth', 0.03); }
             function sfxLightningShoot(mult) {
                 if (mult >= 3.0) { playBeep(1200, 0.35, 'sawtooth', 0.07, -900); playBeep(800, 0.4, 'square', 0.05, -500); }
                 else { playBeep(900, 0.1, 'sawtooth', 0.04, -400); }
             }
 
-            function sfxPowerThreshold() {
-                playBeep(1000, 0.1, 'sine', 0.08, 500);
-            }
+            function sfxPowerThreshold() { playBeep(1000, 0.1, 'sine', 0.08, 500); }
+            function sfxManaError() { playBeep(150, 0.1, 'sawtooth', 0.08, -50); }
 
             function sfxBossFire() {
-                // Lower, deeper fire-like sound effect for King Demon
                 playBeep(80, 0.6, 'sawtooth', 0.15, -60);
                 setTimeout(() => playBeep(60, 0.8, 'square', 0.15, -40), 50);
                 setTimeout(() => playBeep(100, 0.5, 'sawtooth', 0.12, -80), 100);
                 setTimeout(() => playBeep(40, 1.0, 'square', 0.18, -20), 150);
             }
 
-            function sfxCollectHeart() {
-                playBeep(600, 0.1, 'sine', 0.06, 200);
-            }
+            function sfxCollectHeart() { playBeep(600, 0.1, 'sine', 0.06, 200); }
             function sfxCollectLife() {
                 playBeep(400, 0.1, 'square', 0.05, 200);
                 setTimeout(() => playBeep(600, 0.1, 'square', 0.05, 200), 100);
                 setTimeout(() => playBeep(800, 0.15, 'square', 0.05, 300), 200);
             }
+            function sfxCollectMana() { playBeep(900 + Math.random()*200, 0.05, 'sine', 0.02, 100); }
 
             function sfxTeleport() {
                 playBeep(600, 0.1, 'sine', 0.05, 400);
                 setTimeout(() => playBeep(1000, 0.15, 'sine', 0.05, -600), 50);
+            }
+
+            function sfxTimeFreezeIntro() {
+                if (!audioCtx) return;
+                try {
+                    const t = audioCtx.currentTime;
+                    const osc1 = audioCtx.createOscillator();
+                    osc1.type = 'square';
+                    osc1.frequency.setValueAtTime(80, t);
+                    osc1.frequency.exponentialRampToValueAtTime(10, t + 1.2);
+
+                    const osc2 = audioCtx.createOscillator();
+                    osc2.type = 'sawtooth';
+                    osc2.frequency.setValueAtTime(120, t);
+                    osc2.frequency.exponentialRampToValueAtTime(5, t + 1.2);
+
+                    const gain = audioCtx.createGain();
+                    gain.gain.setValueAtTime(0.4, t);
+                    gain.gain.linearRampToValueAtTime(0.0, t + 1.2);
+
+                    osc1.connect(gain);
+                    osc2.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc1.start(t); osc1.stop(t + 1.2);
+                    osc2.start(t); osc2.stop(t + 1.2);
+                } catch (e) {}
             }
 
             function sfxWalk() {
@@ -519,7 +550,7 @@
             // ─────────────────────────────────────
             // GAME STATE
             // ─────────────────────────────────────
-            const STATE = { MENU: 'menu', STORY: 'story', STORY_LEVEL_20: 'storyLevel20', PLAYING: 'playing', LEVEL_COMPLETE: 'levelComplete', GAME_OVER: 'gameOver', VICTORY: 'victory' };
+            const STATE = { MENU: 'menu', STORY: 'story', STORY_LEVEL_20: 'storyLevel20', POWER_ABSORB: 'powerAbsorb', POWER_INFO: 'powerInfo', PLAYING: 'playing', LEVEL_COMPLETE: 'levelComplete', GAME_OVER: 'gameOver', VICTORY: 'victory' };
             let gameState = STATE.MENU;
             let isDevMode = false;
             let devAutoLevel = true;
@@ -529,6 +560,10 @@
             let level = 1;
             let score = 0;
             let npcsRemaining = 0;
+            let bossSpawned = false; 
+            let timeFreezeDuration = 0; 
+            let timeFreezeMax = 0;
+            let timeStopIntroTimer = 0;
             
             let playerHealth = 3;
             let maxHealth = 5;
@@ -539,14 +574,34 @@
             let shakeIntensity = 0;
             let clouds = [];
             let stars = [];
-            let isTimeFrozen = false;
+            let isTimeFrozen = false; // Dev tool toggle
+
+            const hasSeenPower = {};
+            let activePowerSymbol = null;
+            let powerAbsorbTimer = 0;
+            let powerAbsorbParticles = [];
+
+            const POWER_DESCS = {
+                5: { title: "New Spell: Teleportation", icon: "🌀", color: "#aa00ff", desc: "Instantly close the gap! Tap <b>Q</b> (or 🌀) to teleport to the nearest enemy. Hold to drain Mana continuously, charging a massive kinetic explosion across multiple targets upon arrival!" },
+                10: { title: "New Spell: Lightning", icon: "⚡", color: "#00ffff", desc: "Unleash piercing energy! Tap <b>E</b> (or ⚡) to fire quick jolts. Hold to drain Mana and overcharge the blast for devastating area damage that rips through enemies." },
+                15: { title: "New Spell: Summon", icon: "🪄", color: "#4d9e5b", desc: "Call upon friendly Wizard Disciples! Tap <b>R</b> (or 🪄) to summon an ally to fight alongside you. Hold to drain Mana and summon up to 3 helpers at once to draw enemy fire." },
+                20: { title: "Ultimate Power: Time Freeze", icon: "⏳", color: "#88ccff", desc: "Manipulate the fabric of reality! Tap <b>C</b> (or ⏳) to pause time for all enemies for 1.5 seconds. Hold to drain heavy Mana and exponentially freeze time up to 12.5 seconds!" }
+            };
+
+            const COSTS = {
+                fire:      { base: 200 / 1.7, max: 200, maxFrames: 180 },
+                lightning: { base: 250 / 1.7, max: 250, maxFrames: 180 },
+                teleport:  { base: 500 / 1.7, max: 500, maxFrames: 180 },
+                summon:    { base: 400 / 1.7, max: 400, maxFrames: 120 },
+                time:      { base: 600 / 1.7, max: 600, maxFrames: 120 }
+            };
 
             // ─────────────────────────────────────
             // INPUT HANDLING
             // ─────────────────────────────────────
             const keys = {};
             let mousePressed = false;
-            let mobLeft = false, mobRight = false, mobJump = false, mobFire = false, mobLightning = false, mobTeleport = false, mobSummon = false;
+            let mobLeft = false, mobRight = false, mobJump = false, mobFire = false, mobLightning = false, mobTeleport = false, mobSummon = false, mobTime = false;
 
             window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; keys[e.code] = true; });
             window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; keys[e.code] = false; });
@@ -574,6 +629,7 @@
                 bindBtn('btn-lightning', v => mobLightning = v);
                 bindBtn('btn-teleport', v => mobTeleport = v);
                 bindBtn('btn-summon', v => mobSummon = v);
+                bindBtn('btn-time', v => mobTime = v);
             }
             if (isMobileDevice) setupMobileControls();
 
@@ -581,25 +637,20 @@
             function isLeftInput() { return keys['a'] || keys['arrowleft'] || keys['KeyA'] || keys['ArrowLeft'] || mobLeft; }
             function isRightInput() { return keys['d'] || keys['arrowright'] || keys['KeyD'] || keys['ArrowRight'] || mobRight; }
             function isFireInput() { return keys['f'] || keys['j'] || keys['KeyF'] || keys['KeyJ'] || mousePressed || mobFire; }
-            
-            function isLightningInput() { 
-                if (level < 10 && !isDevMode) return false;
-                return keys['e'] || keys['k'] || keys['KeyE'] || keys['KeyK'] || mobLightning; 
-            }
-
-            function isTeleportInput() {
-                if (level < 5 && !isDevMode) return false;
-                return keys['q'] || keys['KeyQ'] || mobTeleport;
-            }
-
-            function isSummonInput() {
-                if (level < 15 && !isDevMode) return false;
-                return keys['r'] || keys['KeyR'] || mobSummon;
-            }
+            function isLightningInput() { if (level < 10 && !isDevMode) return false; return keys['e'] || keys['k'] || keys['KeyE'] || keys['KeyK'] || mobLightning; }
+            function isTeleportInput() { if (level < 5 && !isDevMode) return false; return keys['q'] || keys['KeyQ'] || mobTeleport; }
+            function isSummonInput() { if (level < 15 && !isDevMode) return false; return keys['r'] || keys['KeyR'] || mobSummon; }
+            function isTimeInput() { if (level < 20 && !isDevMode) return false; return keys['c'] || keys['KeyC'] || mobTime; }
 
             // ─────────────────────────────────────
             // CORE UTILS
             // ─────────────────────────────────────
+            function formatHP(hp) {
+                if (hp >= 1000000) return (hp / 1000000).toFixed(1) + 'M';
+                if (hp >= 1000) return (hp / 1000).toFixed(1) + 'k';
+                return Math.ceil(hp);
+            }
+
             class Particle {
                 constructor(x, y, vx, vy, color, life = 30, size = 3) {
                     this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.color = color;
@@ -626,6 +677,35 @@
                 }
             }
 
+            class AbsorbParticle {
+                constructor(x, y, color) {
+                    this.x = x; this.y = y; this.color = color;
+                    this.vx = (Math.random() - 0.5) * 12;
+                    this.vy = (Math.random() - 1) * 12;
+                    this.dead = false;
+                }
+                update(targetX, targetY) {
+                    let dx = targetX - this.x;
+                    let dy = targetY - this.y;
+                    let dist = Math.hypot(dx, dy);
+                    if (dist < 15) {
+                        this.dead = true;
+                    } else {
+                        this.vx += dx * 0.008;
+                        this.vy += dy * 0.008;
+                        this.vx *= 0.92; this.vy *= 0.92;
+                        this.x += this.vx; this.y += this.vy;
+                    }
+                }
+                draw(ctx) {
+                    ctx.fillStyle = this.color;
+                    ctx.shadowColor = this.color;
+                    ctx.shadowBlur = 10;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, 4, 0, Math.PI*2); ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+
             function drawEntityWithFlash(ctx, cx, bottom, facingRight, scale, drawFunc, flashColor = null, flashAlpha = 0) {
                 spriteCtx.clearRect(0, 0, 400, 400);
                 spriteCtx.save();
@@ -648,6 +728,93 @@
 
                 ctx.drawImage(spriteCanvas, cx - 200, bottom - 380);
             }
+
+            // ─────────────────────────────────────
+            // POWER SYMBOL 
+            // ─────────────────────────────────────
+            class PowerSymbol {
+                constructor(x, y, level) {
+                    this.x = x; this.y = y; this.level = level;
+                    this.info = POWER_DESCS[level];
+                    this.color = this.info.color;
+                    this.timer = 0;
+                    this.collected = false;
+                }
+                update(playerRef) {
+                    if (this.collected) return;
+                    this.timer++;
+                    const dx = playerRef.centerX - this.x;
+                    const dy = playerRef.centerY - this.y;
+                    if (Math.hypot(dx, dy) < 40) {
+                        this.collected = true;
+                        gameState = STATE.POWER_ABSORB;
+                        powerAbsorbTimer = 0;
+                        powerAbsorbParticles = [];
+                        for(let i=0; i<80; i++) powerAbsorbParticles.push(new AbsorbParticle(this.x, this.y, this.color));
+                    }
+                }
+                draw(ctx) {
+                    if (this.collected) return;
+                    const bob = Math.sin(this.timer * 0.1) * 10;
+                    ctx.fillStyle = '#fff';
+                    ctx.shadowColor = this.color;
+                    ctx.shadowBlur = 20 + Math.sin(this.timer*0.2)*10;
+                    ctx.font = '40px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(this.info.icon, this.x, this.y + bob);
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            // ─────────────────────────────────────
+            // MANA ORBS
+            // ─────────────────────────────────────
+            class ManaOrb {
+                constructor(x, y, amount) {
+                    this.x = x; this.y = y; this.amount = amount;
+                    this.vx = (Math.random() - 0.5) * 12;
+                    this.vy = (Math.random() - 1) * 12;
+                    this.timer = 0;
+                    this.dead = false;
+                }
+                update(playerRef) {
+                    this.timer++;
+                    if (this.timer < 25) {
+                        this.x += this.vx; this.y += this.vy;
+                        this.vx *= 0.9; this.vy *= 0.9;
+                    } else {
+                        let dx = playerRef.centerX - this.x;
+                        let dy = playerRef.centerY - this.y;
+                        let dist = Math.hypot(dx, dy);
+                        if (dist < 20) {
+                            playerRef.mana = Math.min(playerRef.maxMana, playerRef.mana + this.amount);
+                            playerRef.manaGlowTimer = 15;
+                            sfxCollectMana();
+                            this.dead = true;
+                        } else {
+                            this.vx = (dx / dist) * 14;
+                            this.vy = (dy / dist) * 14;
+                            this.x += this.vx; this.y += this.vy;
+                        }
+                    }
+                }
+                draw(ctx) {
+                    ctx.fillStyle = '#00aaff';
+                    ctx.shadowColor = '#00ffff';
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 4, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    if (Math.floor(Date.now() / 100) % 2 === 0) {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, 2, 0, Math.PI*2);
+                        ctx.fill();
+                    }
+                }
+            }
+            let manaOrbs = [];
 
             // ─────────────────────────────────────
             // ITEM DROPS (Hearts & Lives)
@@ -858,21 +1025,20 @@
             // ENEMY WIZARD CLASS (Level 20 Boss & Spawns)
             // ─────────────────────────────────────
             class EnemyWizard {
-                constructor(x, y, platform, type) {
+                constructor(x, y, platform, type, hp) {
                     this.type = type; // 'red_boss' or 'corrupted_helper'
                     this.scale = type === 'red_boss' ? 1.5 : 1;
                     this.width = 28 * this.scale;
                     this.height = 40 * this.scale;
                     this.platform = platform;
                     
-                    this.x = x; this.y = y;
+                    this.x = x; 
+                    this.y = platform.top - this.height; 
                     this.vx = 0; this.vy = 0;
                     
-                    // Base player speed is 2.4. Red wizard is 0.5x slower. Corrupted helper is standard speed.
                     this.speed = type === 'red_boss' ? (2.4 * 0.5) : 2.4; 
                     
-                    // Boss life is exactly 10 (200% of player's 5 hearts), takes 1 damage per hit mathematically.
-                    this.hp = type === 'red_boss' ? 10 : 15;
+                    this.hp = hp || (type === 'red_boss' ? 2000 : 350);
                     this.maxHp = this.hp;
                     
                     this.isBoss = (type === 'red_boss');
@@ -891,14 +1057,13 @@
                     this.maxFallSpeed = 8;
                 }
 
-                update(platformsRef, playerRef) {
+                update(platformsRef, playerRef, npcsRef, enemyWizardsRef) {
                     if (this.eyeBlink > 0) this.eyeBlink--;
                     if (Math.random() < 0.008) this.eyeBlink = 8;
                     if (this.damageFlashTimer > 0) this.damageFlashTimer--;
 
                     if (this.hp < this.maxHp) this.hasBeenAttacked = true;
 
-                    // Find closest target (Player or Friendly Helper)
                     let target = playerRef;
                     let minDist = Math.hypot(playerRef.centerX - this.centerX, playerRef.centerY - this.centerY);
                     for (let h of helpers) {
@@ -911,7 +1076,6 @@
                     }
 
                     if (this.type === 'red_boss') {
-                        // Pace back and forth
                         if (this.facingRight) {
                             this.vx = this.speed;
                             if (this.x + this.width > this.platform.right) this.facingRight = false;
@@ -920,38 +1084,56 @@
                             if (this.x < this.platform.left) this.facingRight = true;
                         }
 
-                        // Face target roughly when shooting
                         if (this.shootTimer > 100) {
                             this.facingRight = target.centerX > this.centerX;
                         }
 
                         this.spawnTimer++;
-                        if (this.spawnTimer >= 600) { // 10 seconds (60 * 10)
+                        if (this.spawnTimer >= 300) { // Check slots every 5 seconds
                             this.spawnTimer = 0;
-                            let r = Math.random();
-                            let cappedNpcSpeed = Math.min(0.3 + 20 * 0.1, 2.5); // level 20 max speed
-                            let requiredHits = Math.ceil(7 * Math.pow(1.98329, 19)); // Level 20 demon hp scaling
-
-                            if (r < 0.33) {
-                                // Spawn Corrupted Helper
-                                enemyWizards.push(new EnemyWizard(this.x, this.y - 20, this.platform, 'corrupted_helper'));
-                            } else if (r < 0.66) {
-                                // Spawn King Demon
-                                npcs.push(new NPC(this.x, this.y - 60, this.platform, cappedNpcSpeed * 0.7, requiredHits * 15, true));
-                            } else {
-                                // Spawn Regular Demon
-                                npcs.push(new NPC(this.x, this.y, this.platform, cappedNpcSpeed + Math.random(), requiredHits));
+                            
+                            let usedSlots = 0;
+                            for(let n of npcsRef) {
+                                if(n.hp > 0) {
+                                    if(n.isBoss) usedSlots += 5;
+                                    else usedSlots += 2.5;
+                                }
                             }
-                            spawnParticles(this.centerX, this.centerY, 30, ['#ff0000', '#000000', '#ffffff'], 6, 30, 4);
+                            for(let ew of enemyWizardsRef) {
+                                if(ew.hp > 0 && ew.type === 'corrupted_helper') usedSlots += 2.5;
+                            }
+
+                            let availableSlots = 5 - usedSlots;
+                            
+                            if (availableSlots >= 2.5) {
+                                let r = Math.random();
+                                let cappedNpcSpeed = Math.min(0.3 + 20 * 0.1, 2.5); 
+                                let scalingFactor = Math.pow(1.5, 20 - 1);
+                                let demonHP = 140 * scalingFactor;
+
+                                if (r < 0.33 && availableSlots >= 2.5) {
+                                    let ew = new EnemyWizard(this.x, this.platform.top - 40, this.platform, 'corrupted_helper', demonHP * 2.5);
+                                    enemyWizardsRef.push(ew);
+                                    spawnParticles(this.centerX, this.centerY, 30, ['#ff0000', '#000000', '#ffffff'], 6, 30, 4);
+                                } else if (r < 0.66 && availableSlots >= 5) {
+                                    let npc = new NPC(this.x, this.platform, cappedNpcSpeed * 0.7, demonHP * 10, true);
+                                    npcsRef.push(npc);
+                                    spawnParticles(this.centerX, this.centerY, 30, ['#ff0000', '#000000', '#ffffff'], 6, 30, 4);
+                                } else if (availableSlots >= 2.5) {
+                                    let npc = new NPC(this.x, this.platform, cappedNpcSpeed + Math.random(), demonHP);
+                                    npcsRef.push(npc);
+                                    spawnParticles(this.centerX, this.centerY, 30, ['#ff0000', '#000000', '#ffffff'], 6, 30, 4);
+                                }
+                            }
                         }
 
                         this.shootTimer++;
-                        if (this.shootTimer >= 120) { // 2 seconds
+                        if (this.shootTimer >= 120) { 
                             this.shootTimer = 0;
                             let pType = Math.random() < 0.5 ? 'fireball' : 'lightning';
                             let mult = 1.0; 
                             let dir = target.centerX > this.centerX ? 1 : -1;
-                            let levelMult = 1 + (20 - 1) * 0.2; 
+                            let levelMult = Math.pow(1.5, 20 - 1); 
                             const fx = dir > 0 ? this.x + this.width + 2 : this.x - 4;
                             const fy = this.y + this.height * 0.35;
                             
@@ -960,7 +1142,6 @@
                         }
 
                     } else if (this.type === 'corrupted_helper') {
-                        // AI Follow Target
                         let dx = target.centerX - this.centerX;
                         let dist = Math.abs(dx);
                         
@@ -971,7 +1152,6 @@
                             this.vx = 0;
                         }
 
-                        // Simple jump logic if blocked
                         if (this.isGrounded && this.vx !== 0) {
                             let blocked = false;
                             for (let p of platformsRef) {
@@ -987,14 +1167,13 @@
                             }
                         }
 
-                        // Shoot randomly (25% as powerful as player's level 20 shots)
                         this.shootTimer++;
                         if (this.shootTimer > 180 + Math.random() * 120) {
                             this.shootTimer = 0;
                             let pType = Math.random() < 0.5 ? 'fireball' : 'lightning';
                             let dir = this.facingRight ? 1 : -1;
-                            let mult = 0.25; // 25% as powerful size/visual
-                            let levelMult = (1 + (20 - 1) * 0.2) * 0.25; // 25% damage mult
+                            let mult = 0.25; 
+                            let levelMult = Math.pow(1.5, level - 1) * 0.25; 
                             
                             const fx = dir > 0 ? this.x + this.width + 2 : this.x - 4;
                             const fy = this.y + this.height * 0.35;
@@ -1010,7 +1189,6 @@
                     if (this.vy > this.maxFallSpeed) this.vy = this.maxFallSpeed;
                     this.x += this.vx; this.y += this.vy;
 
-                    // Collisions
                     const bounds = this.getBounds();
                     this.isGrounded = false;
                     for (const plat of platformsRef) {
@@ -1112,7 +1290,7 @@
                         ctx.fillStyle = '#fff';
                         ctx.font = '10px "Press Start 2P"';
                         ctx.textAlign = 'center';
-                        ctx.fillText(`${Math.ceil(Math.max(0, this.hp))}/${Math.ceil(this.maxHp)}`, cx, by - 5);
+                        ctx.fillText(`${formatHP(Math.max(0, this.hp))}/${formatHP(this.maxHp)}`, cx, by - 5);
                     }
                 }
                 getBounds() { return { left: this.x + 2 * this.scale, right: this.x + this.width - 2 * this.scale, top: this.y + 4 * this.scale, bottom: this.y + this.height }; }
@@ -1125,7 +1303,7 @@
             // NPC CLASS (Demons)
             // ─────────────────────────────────────
             class NPC {
-                constructor(x, y, platform, speed, requiredHits, isBoss = false) {
+                constructor(x, platform, speed, hp, isBoss = false) {
                     this.isBoss = isBoss;
                     this.scale = isBoss ? 4 : 1;
                     this.baseWidth = 26;
@@ -1133,13 +1311,14 @@
                     this.width = this.baseWidth * this.scale; 
                     this.height = this.baseHeight * this.scale;
                     
-                    this.x = x; this.y = y;
+                    this.x = x; 
+                    this.y = platform.top - this.height; // Always spawns correctly on top of the ground
                     this.platform = platform; 
                     this.speed = speed;
                     this.speedModifier = 1;
                     
-                    this.hp = requiredHits;
-                    this.maxHp = requiredHits;
+                    this.hp = hp;
+                    this.maxHp = hp;
                     this.hasBeenAttacked = false; 
                     
                     this.damageFlashTimer = 0;
@@ -1283,7 +1462,7 @@
                         ctx.fillStyle = '#fff';
                         ctx.font = '10px "Press Start 2P"';
                         ctx.textAlign = 'center';
-                        ctx.fillText(`${Math.ceil(Math.max(0, this.hp))}/${Math.ceil(this.maxHp)}`, cx, by - 5);
+                        ctx.fillText(`${formatHP(Math.max(0, this.hp))}/${formatHP(this.maxHp)}`, cx, by - 5);
                     }
                 }
                 getBounds() { return { left: this.x + 3 * this.scale, right: this.x + this.width - 3 * this.scale, top: this.y + 2 * this.scale, bottom: this.y + this.height }; }
@@ -1344,7 +1523,7 @@
                     }
                     const fx = this.facingRight ? this.x + this.width + 2 : this.x - 4;
                     const fy = this.y + this.height * 0.35;
-                    const levelDamageMultiplier = 1 + (level - 1) * 0.2;
+                    const levelDamageMultiplier = Math.pow(1.5, level - 1);
                     
                     if (type === 'lightning') {
                         sfxLightningShoot(multiplier);
@@ -1364,7 +1543,6 @@
                     if (this.attackCooldown > 0) this.attackCooldown--;
                     if (this.teleportCooldown > 0) this.teleportCooldown--;
 
-                    // Find closest valid enemy (NPC or EnemyWizard)
                     let target = null;
                     let minDist = Infinity;
                     let allEnemies = [...npcsList, ...enemyWizardsList];
@@ -1444,10 +1622,8 @@
                                 this.x = targetX; this.y = target.platform.top - this.height;
                                 
                                 let heldSeconds = this.chargeTimer / 60;
-                                let calculatedTpDmg = 10 * (100 + (heldSeconds * 20)); // 10x stronger
-                                
-                                if (target.type === 'red_boss') target.hp -= 1; // Boss special reduction
-                                else target.hp -= calculatedTpDmg * Math.pow(1.2, level - 1);
+                                let calculatedTpDmg = 100 + (heldSeconds * 20);
+                                target.hp -= calculatedTpDmg * Math.pow(1.5, level - 1);
                                 
                                 target.hasBeenAttacked = true;
                                 target.damageFlashTimer = 12;
@@ -1609,6 +1785,10 @@
                     this.attackCooldown = 0;
                     this.attackCooldownMax = 22; 
                     
+                    this.maxMana = 1000;
+                    this.mana = 1000;
+                    this.manaGlowTimer = 0;
+
                     this.fireChargeFrames = 0;
                     this.wasFireInput = false;
                     
@@ -1625,11 +1805,52 @@
                     this.wasSummonInput = false;
                     this.summonCooldown = 0;
                     this.summonChargeFrames = 0;
+
+                    this.timeChargeFrames = 0;
+                    this.wasTimeInput = false;
+                    this.timeCooldown = 0;
                 }
                 
+                handleAbilityCharge(type, isPressed, wasPressed, currentChargeFrames) {
+                    let cost = COSTS[type];
+                    let frames = currentChargeFrames;
+                    let released = false;
+
+                    if (isPressed) {
+                        if (!wasPressed) {
+                            if (this.mana >= cost.base) {
+                                this.mana -= cost.base;
+                                frames = 1;
+                            } else {
+                                isPressed = false;
+                                sfxManaError();
+                            }
+                        } else if (frames > 0 && frames < cost.maxFrames) {
+                            let frameCost = (cost.max - cost.base) / cost.maxFrames;
+                            if (this.mana >= frameCost) {
+                                this.mana -= frameCost;
+                                frames++;
+                            } else {
+                                released = true;
+                                isPressed = false;
+                            }
+                        } else if (frames >= cost.maxFrames) {
+                            // Maxed out, no more drain
+                        }
+                    } else if (wasPressed && frames > 0) {
+                        released = true;
+                    }
+
+                    return { isPressed, released, frames };
+                }
+
                 update(platforms) {
                     if (this.eyeBlink > 0) this.eyeBlink--;
                     if (Math.random() < 0.008) this.eyeBlink = 8;
+                    if (this.manaGlowTimer > 0) this.manaGlowTimer--;
+
+                    // Mana Regeneration: 25 MN/s (frame independent since updating 60x a sec)
+                    this.mana = Math.min(this.maxMana, this.mana + 25 / 60);
 
                     if (this.invincible) {
                         this.invincibleTimer--;
@@ -1638,6 +1859,7 @@
                     if (this.attackCooldown > 0) this.attackCooldown--;
                     if (this.teleportCooldown > 0) this.teleportCooldown--;
                     if (this.summonCooldown > 0) this.summonCooldown--;
+                    if (this.timeCooldown > 0) this.timeCooldown--;
 
                     this.vx = 0;
                     if (isLeftInput()) this.vx = -this.speed;
@@ -1651,31 +1873,52 @@
                     }
 
                     const currentJumpPressed = isJumpInput();
-                    const currentFirePressed = isFireInput();
-                    const currentLightningPressed = isLightningInput();
-                    const currentTeleportPressed = isTeleportInput();
-                    const currentSummonPressed = isSummonInput();
+                    let currentFirePressed = isFireInput();
+                    let currentLightningPressed = isLightningInput();
+                    let currentTeleportPressed = isTeleportInput();
+                    let currentSummonPressed = isSummonInput();
+                    let currentTimePressed = isTimeInput();
                     
                     if (this.isGrounded) this.coyoteTimer = 5;
                     else if (this.coyoteTimer > 0) this.coyoteTimer--;
 
-                    // --- TELEPORT LOGIC ---
-                    if (currentTeleportPressed && (level >= 5 || isDevMode) && npcs.length > 0 && this.teleportCooldown <= 0) {
-                        this.teleportChargeFrames++;
-                        if (this.teleportChargeFrames % 20 === 0) sfxLightningCharge(this.teleportChargeFrames);
-                    } 
-                    else if (!currentTeleportPressed && this.wasTeleportInput && this.teleportChargeFrames > 0 && this.teleportCooldown <= 0 && (npcs.length > 0 || enemyWizards.length > 0)) {
-                        
+                    // TIME MANIPULATION
+                    if (this.timeCooldown > 0) { currentTimePressed = false; this.wasTimeInput = false; this.timeChargeFrames = 0; }
+                    let timeRes = this.handleAbilityCharge('time', currentTimePressed, this.wasTimeInput, this.timeChargeFrames);
+                    this.timeChargeFrames = timeRes.frames;
+                    currentTimePressed = timeRes.isPressed;
+                    
+                    if (timeRes.frames > 0 && timeRes.frames % 20 === 0 && !timeRes.released) sfxLightningCharge(timeRes.frames);
+
+                    if (timeRes.released && this.timeCooldown <= 0) {
+                        let freezeSecs = 1.5 * Math.pow((12.5 / 1.5), this.timeChargeFrames / 120);
+                        timeFreezeDuration = freezeSecs * 60; 
+                        timeFreezeMax = timeFreezeDuration;
+                        timeStopIntroTimer = 60; 
+                        this.timeCooldown = 300; // 5s cd
+                        this.timeChargeFrames = 0;
+                        sfxTimeFreezeIntro();
+                    }
+                    this.wasTimeInput = currentTimePressed;
+
+                    // TELEPORT LOGIC
+                    if (this.teleportCooldown > 0) { currentTeleportPressed = false; this.wasTeleportInput = false; this.teleportChargeFrames = 0; }
+                    let tpRes = this.handleAbilityCharge('teleport', currentTeleportPressed, this.wasTeleportInput, this.teleportChargeFrames);
+                    this.teleportChargeFrames = tpRes.frames;
+                    currentTeleportPressed = tpRes.isPressed;
+
+                    if (tpRes.frames > 0 && tpRes.frames % 20 === 0 && !tpRes.released) sfxLightningCharge(tpRes.frames);
+
+                    if (tpRes.released && this.teleportCooldown <= 0 && (npcs.length > 0 || enemyWizards.length > 0)) {
                         let maxPhases = 1;
-                        if (this.teleportChargeFrames >= 180) maxPhases = 4; // Max bar
-                        else if (this.teleportChargeFrames >= 90) maxPhases = 2; // Half bar
+                        if (this.teleportChargeFrames >= 180) maxPhases = 4;
+                        else if (this.teleportChargeFrames >= 90) maxPhases = 2; 
 
                         spawnParticles(this.centerX, this.centerY, 30, ['#aa00ff', '#ff00ff', '#ffffff'], 6, 25, 4);
 
                         let heldSeconds = this.teleportChargeFrames / 60;
                         let calculatedTpDmg = 100 + (heldSeconds * 20);
-                        let maxTpDmg = 200 + ((level - 1) * 20);
-                        let finalTpDmg = Math.min(calculatedTpDmg, maxTpDmg) * (isDevMode ? devPowerMult : 1);
+                        let finalTpDmg = calculatedTpDmg * Math.pow(1.5, level - 1) * (isDevMode ? devPowerMult : 1);
 
                         let phasesDone = 0;
                         let currentX = this.centerX;
@@ -1693,13 +1936,10 @@
                                     if (d < minDist) { minDist = d; closest = allEnemies[i]; }
                                 }
                             }
-
                             if (!closest) break; 
 
                             targetNPC = closest;
-                            if (closest.type === 'red_boss') closest.hp -= 1; // 1 Hit mathematically due to 200% life logic
-                            else closest.hp -= finalTpDmg;
-                            
+                            closest.hp -= finalTpDmg;
                             closest.hasBeenAttacked = true;
                             closest.damageFlashTimer = 12;
                             spawnParticles(closest.centerX, closest.centerY, 15, ['#ff00ff', '#ffffff'], 5, 20, 3);
@@ -1709,7 +1949,6 @@
                             let offsetX = isLeftOfEnemy ? closest.width/2 + this.width/2 + 10 : -(closest.width/2 + this.width/2 + 10); 
                             currentX = closest.centerX + offsetX;
                             currentY = closest.centerY;
-
                             phasesDone++;
                         }
 
@@ -1717,41 +1956,30 @@
                             let isLeftOfEnemy = this.centerX < targetNPC.centerX;
                             let offsetX = isLeftOfEnemy ? targetNPC.width/2 + this.width/2 + 10 : -(targetNPC.width/2 + this.width/2 + 10); 
                             let targetX = targetNPC.centerX + offsetX - this.width / 2;
-                            
                             targetX = Math.max(targetNPC.platform.left, Math.min(targetNPC.platform.right - this.width, targetX));
-                            
-                            this.x = targetX;
-                            this.y = targetNPC.platform.top - this.height;
-
-                            if (this.x < 0) this.x = 0;
-                            if (this.x + this.width > WORLD_WIDTH) this.x = WORLD_WIDTH - this.width;
-
-                            this.vy = 0;
-                            this.isGrounded = true;
-                            
-                            this.invincible = true;
-                            this.invincibleTimer = Math.max(this.invincibleTimer, 84); 
+                            this.x = targetX; this.y = targetNPC.platform.top - this.height;
+                            if (this.x < 0) this.x = 0; if (this.x + this.width > WORLD_WIDTH) this.x = WORLD_WIDTH - this.width;
+                            this.vy = 0; this.isGrounded = true;
+                            this.invincible = true; this.invincibleTimer = Math.max(this.invincibleTimer, 84); 
                             this.teleportCooldown = 90;
-                            
                             sfxTeleport();
                             spawnParticles(this.centerX, this.centerY, 30, ['#aa00ff', '#ff00ff', '#ffffff'], 6, 25, 4);
                             this.facingRight = this.centerX < targetNPC.centerX;
                         }
-
                         this.teleportChargeFrames = 0;
                     }
-
-                    if (!currentTeleportPressed) this.teleportChargeFrames = 0;
+                    if (!currentTeleportPressed && !tpRes.released) this.teleportChargeFrames = 0;
                     this.wasTeleportInput = currentTeleportPressed;
-                    // --- END TELEPORT ---
 
-                    // --- SUMMON LOGIC ---
-                    if (currentSummonPressed && (level >= 15 || isDevMode) && this.summonCooldown <= 0) {
-                        this.summonChargeFrames++;
-                        if (this.summonChargeFrames % 20 === 0) sfxLightningCharge(this.summonChargeFrames);
-                    } 
-                    else if (!currentSummonPressed && this.wasSummonInput && this.summonChargeFrames > 0 && this.summonCooldown <= 0) {
-                        
+                    // SUMMON LOGIC
+                    if (this.summonCooldown > 0) { currentSummonPressed = false; this.wasSummonInput = false; this.summonChargeFrames = 0; }
+                    let smRes = this.handleAbilityCharge('summon', currentSummonPressed, this.wasSummonInput, this.summonChargeFrames);
+                    this.summonChargeFrames = smRes.frames;
+                    currentSummonPressed = smRes.isPressed;
+
+                    if (smRes.frames > 0 && smRes.frames % 20 === 0 && !smRes.released) sfxLightningCharge(smRes.frames);
+
+                    if (smRes.released && this.summonCooldown <= 0) {
                         let helpersToSpawn = 1;
                         if (this.summonChargeFrames >= 120) helpersToSpawn = 3;
                         else if (this.summonChargeFrames >= 60) helpersToSpawn = 2;
@@ -1760,18 +1988,49 @@
                             let spawnX = this.centerX + (Math.random() * 60 - 30);
                             helpers.push(new Helper(spawnX, this.y - 20, 15));
                         }
-
                         spawnParticles(this.centerX, this.centerY, 40, ['#4d9e5b', '#b8ffc9', '#ffffff'], 6, 25, 4);
                         sfxCollectLife(); 
-                        
                         this.summonCooldown = 360;
                         this.summonChargeFrames = 0;
                     }
-
-                    if (!currentSummonPressed) this.summonChargeFrames = 0;
+                    if (!currentSummonPressed && !smRes.released) this.summonChargeFrames = 0;
                     this.wasSummonInput = currentSummonPressed;
-                    // --- END SUMMON ---
 
+                    // FIRE LOGIC
+                    if (this.attackCooldown > 0) { currentFirePressed = false; this.wasFireInput = false; this.fireChargeFrames = 0; }
+                    if (currentLightningPressed) currentFirePressed = false;
+                    let fireRes = this.handleAbilityCharge('fire', currentFirePressed, this.wasFireInput, this.fireChargeFrames);
+                    this.fireChargeFrames = fireRes.frames;
+                    currentFirePressed = fireRes.isPressed;
+
+                    if (fireRes.frames === 60) sfxPowerThreshold();
+                    if (fireRes.frames > 60 && fireRes.frames % 20 === 0 && !fireRes.released) sfxFireCharge(fireRes.frames);
+
+                    if (fireRes.released && this.attackCooldown <= 0) {
+                        this.shoot('fireball', this.fireChargeFrames);
+                        this.fireChargeFrames = 0;
+                    }
+                    if (!currentFirePressed && !fireRes.released) this.fireChargeFrames = 0;
+                    this.wasFireInput = currentFirePressed;
+
+                    // LIGHTNING LOGIC
+                    if (this.attackCooldown > 0) { currentLightningPressed = false; this.wasLightningInput = false; this.lightningChargeFrames = 0; }
+                    if (currentFirePressed) currentLightningPressed = false;
+                    let litRes = this.handleAbilityCharge('lightning', currentLightningPressed, this.wasLightningInput, this.lightningChargeFrames);
+                    this.lightningChargeFrames = litRes.frames;
+                    currentLightningPressed = litRes.isPressed;
+
+                    if (litRes.frames === 60) sfxPowerThreshold();
+                    if (litRes.frames > 60 && litRes.frames % 20 === 0 && !litRes.released) sfxLightningCharge(litRes.frames);
+
+                    if (litRes.released && this.attackCooldown <= 0) {
+                        this.shoot('lightning', this.lightningChargeFrames);
+                        this.lightningChargeFrames = 0;
+                    }
+                    if (!currentLightningPressed && !litRes.released) this.lightningChargeFrames = 0;
+                    this.wasLightningInput = currentLightningPressed;
+
+                    // JUMP LOGIC
                     if (currentJumpPressed && (this.isGrounded || this.coyoteTimer > 0)) {
                         this.jumpChargeFrames++;
                         if (this.jumpChargeFrames % 12 === 0) sfxJumpCharge(this.jumpChargeFrames);
@@ -1780,11 +2039,9 @@
                         if (this.isGrounded || this.coyoteTimer > 0) {
                             const intervals = Math.floor(this.jumpChargeFrames / 12);
                             const bonusMultiplier = Math.min(1.0, intervals * 0.05);
-                            
                             const baseHeight = Math.pow(this.jumpForce, 2) / (2 * this.gravity);
                             const targetHeight = baseHeight * (1.0 + bonusMultiplier);
                             this.vy = -Math.sqrt(2 * this.gravity * targetHeight);
-                            
                             this.isGrounded = false; this.coyoteTimer = 0;
                             
                             if (bonusMultiplier > 0) {
@@ -1799,34 +2056,10 @@
                     else if (!currentJumpPressed) {
                         this.jumpChargeFrames = 0;
                     }
-                    
                     if (!this.isGrounded && this.coyoteTimer <= 0) this.jumpChargeFrames = 0;
                     this.wasJumpInput = currentJumpPressed;
 
-                    if (currentFirePressed && !currentLightningPressed) {
-                        this.fireChargeFrames++;
-                        if (this.fireChargeFrames === 60) sfxPowerThreshold();
-                        if (this.fireChargeFrames > 60 && this.fireChargeFrames % 20 === 0) sfxFireCharge(this.fireChargeFrames);
-                    } else if (this.wasFireInput && this.fireChargeFrames > 0 && this.attackCooldown <= 0) {
-                        this.shoot('fireball', this.fireChargeFrames);
-                        this.fireChargeFrames = 0;
-                    } else {
-                        this.fireChargeFrames = 0;
-                    }
-                    this.wasFireInput = currentFirePressed;
-
-                    if (currentLightningPressed && !currentFirePressed) {
-                        this.lightningChargeFrames++;
-                        if (this.lightningChargeFrames === 60) sfxPowerThreshold();
-                        if (this.lightningChargeFrames > 60 && this.lightningChargeFrames % 20 === 0) sfxLightningCharge(this.lightningChargeFrames);
-                    } else if (this.wasLightningInput && this.lightningChargeFrames > 0 && this.attackCooldown <= 0) {
-                        this.shoot('lightning', this.lightningChargeFrames);
-                        this.lightningChargeFrames = 0;
-                    } else {
-                        this.lightningChargeFrames = 0;
-                    }
-                    this.wasLightningInput = currentLightningPressed;
-
+                    // MOVEMENT & COLLISION
                     this.vy += this.gravity;
                     if (this.vy > this.maxFallSpeed) this.vy = this.maxFallSpeed;
                     this.x += this.vx; this.y += this.vy;
@@ -1859,7 +2092,8 @@
                 respawn() {
                     this.x = 60; this.y = 350; this.vy = -6;
                     this.jumpChargeFrames = 0; this.fireChargeFrames = 0; this.lightningChargeFrames = 0;
-                    this.invincible = true; this.invincibleTimer = 80; this.attackCooldown = 0; this.teleportCooldown = 0; this.summonCooldown = 0;
+                    this.timeChargeFrames = 0; this.summonChargeFrames = 0; this.teleportChargeFrames = 0;
+                    this.invincible = true; this.invincibleTimer = 80; this.attackCooldown = 0; this.teleportCooldown = 0; this.summonCooldown = 0; this.timeCooldown = 0;
                 }
                 
                 takeDamage(forceDeath = false) {
@@ -1905,7 +2139,7 @@
                         spawnParticles(fx, fy, 6 + Math.ceil(multiplier*2), ['#ffaa00', '#ff6600', '#ffff00', '#fff'], 3 + multiplier/2, 15, 2 + multiplier/4);
                     }
 
-                    const levelDamageMultiplier = 1 + (level - 1) * 0.2;
+                    const levelDamageMultiplier = Math.pow(1.5, level - 1);
                     let finalMult = levelDamageMultiplier * (isDevMode ? devPowerMult : 1);
                     projectiles.push(new Projectile(fx, fy, this.facingRight ? 1 : -1, multiplier, type, finalMult));
                 }
@@ -1924,7 +2158,10 @@
                     let flashColor = null;
                     let flashAlpha = 0;
                     
-                    if (this.jumpChargeFrames > 0) {
+                    if (gameState === STATE.POWER_ABSORB && activePowerSymbol) {
+                        flashColor = activePowerSymbol.color;
+                        flashAlpha = Math.min(0.8, powerAbsorbTimer / 100);
+                    } else if (this.jumpChargeFrames > 0) {
                         flashColor = '#ffffff';
                         flashAlpha = Math.abs(Math.sin(this.jumpChargeFrames * 0.1)) * 0.6 + 0.2;
                     } else if (this.lightningChargeFrames > 0) {
@@ -1939,6 +2176,12 @@
                     } else if (this.summonChargeFrames > 0) {
                         flashColor = '#4d9e5b';
                         flashAlpha = Math.abs(Math.sin(this.summonChargeFrames * 0.15)) * 0.5 + 0.2;
+                    } else if (this.timeChargeFrames > 0) {
+                        flashColor = '#88ccff';
+                        flashAlpha = Math.abs(Math.sin(this.timeChargeFrames * 0.15)) * 0.5 + 0.2;
+                    } else if (this.manaGlowTimer > 0) {
+                        flashColor = '#00aaff';
+                        flashAlpha = (this.manaGlowTimer / 15) * 0.8;
                     }
 
                     drawEntityWithFlash(ctx, cx, bottom + walkBob, facingRight, 1, (sCtx) => {
@@ -2030,55 +2273,132 @@
                 return true;
             }
 
-            function generateLevel(lvl) {
-                platforms = []; npcs = []; projectiles = []; bossProjectiles = []; particles = []; items = []; helpers = []; enemyWizards = [];
-                playerHealth = Math.min(playerHealth + 1, maxHealth); 
+            function showPowerScreen(lvl) {
+                gameState = STATE.POWER_INFO;
+                const info = POWER_DESCS[lvl];
+                document.getElementById('power-info-title').innerText = info.title;
+                document.getElementById('power-info-icon').innerText = info.icon;
+                document.getElementById('power-info-icon').style.textShadow = `0 0 20px ${info.color}`;
+                document.getElementById('power-info-desc').innerHTML = info.desc;
+                document.getElementById('power-info-overlay').style.display = 'flex';
+            }
+
+            function spawnEnemiesForLevel(lvl) {
+                const difficulty = lvl;
+                const scalingFactor = Math.pow(1.5, lvl - 1);
+                const demonHP = 140 * scalingFactor;
+                const isBossLevel = lvl === 10; 
+                const npcCount = Math.min(3 + Math.floor(difficulty * 1.5), 35);
+                const npcSpeed = 0.8 + difficulty * 0.25;
+                const cappedNpcSpeed = Math.min(npcSpeed, 5.5);
+                const ground = platforms[0];
+
+                if (lvl === 20) {
+                    // Level 20 minion setup
+                    npcs.push(new NPC(GAME_WIDTH + 50, ground, 2.5, demonHP));
+                    npcs.push(new NPC(GAME_WIDTH + 200, ground, 2.5, demonHP));
+                    enemyWizards.push(new EnemyWizard(GAME_WIDTH - 150, platforms[platforms.length-2].top - 40, platforms[platforms.length-2], 'corrupted_helper', demonHP * 2.5));
+                    enemyWizards.push(new EnemyWizard(GAME_WIDTH + 380, platforms[platforms.length-1].top - 40, platforms[platforms.length-1], 'corrupted_helper', demonHP * 2.5));
+                    npcsRemaining = npcs.length + enemyWizards.length;
+                    return;
+                }
+
+                const shuffledPlatforms = [...platforms].sort(() => Math.random() - 0.5);
+                let npcsToPlace = npcCount;
+                
+                if (isBossLevel) {
+                    const nx = ground.left + GAME_WIDTH / 2;
+                    npcs.push(new NPC(nx, ground, cappedNpcSpeed * 0.7, demonHP * 15, true));
+                    npcsToPlace--;
+                }
+
+                for (const plat of shuffledPlatforms) {
+                    if (npcsToPlace <= 0) break;
+                    if (plat === ground && Math.random() > 0.5) continue;
+
+                    const npcsOnThisPlat = plat.width > 100 ? Math.min(npcsToPlace, 1 + Math.floor(Math.random() * 2)) : 1;
+                    for (let n = 0; n < npcsOnThisPlat && npcsToPlace > 0; n++) {
+                        const nx = plat.left + 10 + Math.random() * (plat.width - 40);
+                        npcs.push(new NPC(nx, plat, cappedNpcSpeed + Math.random() * 1.5, demonHP));
+                        npcsToPlace--;
+                    }
+                }
+
+                while (npcsToPlace > 0) {
+                    const nx = ground.left + 50 + Math.random() * (ground.width - 100);
+                    npcs.push(new NPC(nx, ground, cappedNpcSpeed + Math.random() * 1.5, demonHP));
+                    npcsToPlace--;
+                }
+                npcsRemaining = npcs.length;
+            }
+
+            document.getElementById('btn-close-power').addEventListener('click', () => {
+                document.getElementById('power-info-overlay').style.display = 'none';
+                
+                // Unlock visuals
+                if (level >= 5) { document.getElementById('btn-teleport').style.display = 'flex'; document.getElementById('inst-teleport-wrapper').style.display = 'inline'; }
+                if (level >= 10) { document.getElementById('btn-lightning').style.display = 'flex'; document.getElementById('inst-lightning-wrapper').style.display = 'inline'; }
+                if (level >= 15) { document.getElementById('btn-summon').style.display = 'flex'; document.getElementById('inst-summon-wrapper').style.display = 'inline'; }
+                if (level >= 20) { document.getElementById('btn-time').style.display = 'flex'; document.getElementById('inst-time-wrapper').style.display = 'inline'; }
+                
+                spawnEnemiesForLevel(level);
                 gameState = STATE.PLAYING;
-                levelTransitionTimer = 0; gameOverTimer = 0; shakeTimer = 0; shakeIntensity = 0;
+            });
+
+            function generateLevel(lvl) {
+                bossSpawned = false; 
+                platforms = []; npcs = []; projectiles = []; bossProjectiles = []; particles = []; items = []; helpers = []; enemyWizards = []; manaOrbs = []; activePowerSymbol = null; powerAbsorbParticles = [];
+                playerHealth = Math.min(playerHealth + 1, maxHealth); 
+                
+                if (player) {
+                    player.maxMana = 1000 + (lvl - 1) * 215;
+                    player.mana = player.maxMana; // Heal full mana on level complete
+                }
+                
+                gameState = STATE.PLAYING;
+                levelTransitionTimer = 0; gameOverTimer = 0; shakeTimer = 0; shakeIntensity = 0; timeFreezeDuration = 0; timeStopIntroTimer = 0;
 
                 const lightningBtn = document.getElementById('btn-lightning');
-                if (lightningBtn) lightningBtn.style.display = (level >= 10 || isDevMode) ? 'flex' : 'none';
+                if (lightningBtn) lightningBtn.style.display = (isDevMode || (level >= 10 && hasSeenPower[10])) ? 'flex' : 'none';
                 
                 const instLightning = document.getElementById('inst-lightning-wrapper');
-                if (instLightning) instLightning.style.display = (level >= 10 || isDevMode) ? 'inline' : 'none';
+                if (instLightning) instLightning.style.display = (isDevMode || (level >= 10 && hasSeenPower[10])) ? 'inline' : 'none';
 
                 const teleportBtn = document.getElementById('btn-teleport');
-                if (teleportBtn) teleportBtn.style.display = (level >= 5 || isDevMode) ? 'flex' : 'none';
+                if (teleportBtn) teleportBtn.style.display = (isDevMode || (level >= 5 && hasSeenPower[5])) ? 'flex' : 'none';
                 
                 const instTeleport = document.getElementById('inst-teleport-wrapper');
-                if (instTeleport) instTeleport.style.display = (level >= 5 || isDevMode) ? 'inline' : 'none';
+                if (instTeleport) instTeleport.style.display = (isDevMode || (level >= 5 && hasSeenPower[5])) ? 'inline' : 'none';
 
                 const summonBtn = document.getElementById('btn-summon');
-                if (summonBtn) summonBtn.style.display = (level >= 15 || isDevMode) ? 'flex' : 'none';
+                if (summonBtn) summonBtn.style.display = (isDevMode || (level >= 15 && hasSeenPower[15])) ? 'flex' : 'none';
                 
                 const instSummon = document.getElementById('inst-summon-wrapper');
-                if (instSummon) instSummon.style.display = (level >= 15 || isDevMode) ? 'inline' : 'none';
+                if (instSummon) instSummon.style.display = (isDevMode || (level >= 15 && hasSeenPower[15])) ? 'inline' : 'none';
 
-                const difficulty = lvl;
-                const numElevatedPlatforms = Math.min(15 + Math.floor(difficulty * 3), 60);
+                const timeBtn = document.getElementById('btn-time');
+                if (timeBtn) timeBtn.style.display = (isDevMode || (level >= 20 && hasSeenPower[20])) ? 'flex' : 'none';
                 
+                const instTime = document.getElementById('inst-time-wrapper');
+                if (instTime) instTime.style.display = (isDevMode || (level >= 20 && hasSeenPower[20])) ? 'inline' : 'none';
+
+                const numElevatedPlatforms = Math.min(15 + Math.floor(lvl * 3), 60);
                 const groundY = 488;
                 const ground = new Platform(-10, groundY, WORLD_WIDTH + 20, 60);
                 platforms.push(ground);
 
-                // Level 20 Final Arena Override
                 if (level === 20) {
                     const centerPlat = new Platform(GAME_WIDTH, groundY - 100, 300, 16);
                     platforms.push(centerPlat);
                     platforms.push(new Platform(GAME_WIDTH - 200, groundY - 200, 150, 16));
                     platforms.push(new Platform(GAME_WIDTH + 350, groundY - 200, 150, 16));
-                    
-                    enemyWizards.push(new EnemyWizard(GAME_WIDTH + 150, groundY - 40, ground, 'red_boss'));
-                    npcsRemaining = 1;
                 } else {
                     for (let i = 0; i < numElevatedPlatforms; i++) {
                         let placed = false; let attempts = 0;
                         while (!placed && attempts < 300) { 
                             const parent = platforms[Math.floor(Math.random() * platforms.length)];
                             const dirX = Math.random() < 0.5 ? -1 : 1;
-                            
                             let x, y, w = 80 + Math.random() * 120;
-                            
                             if (parent === ground) {
                                 x = Math.random() * (WORLD_WIDTH - w - 20) + 10;
                                 y = groundY - 60 - Math.random() * 150; 
@@ -2088,12 +2408,9 @@
                                 x = parent.x + offsetX; 
                                 y = parent.top - offsetY;
                             }
-
                             if (x < 10) x = 10; if (x + w > WORLD_WIDTH - 10) x = WORLD_WIDTH - w - 10;
                             if (y > groundY - 60) y = groundY - 60; if (y < 80) y = 80;
-
                             const newPlat = new Platform(x, y, w, 16); let isValid = true;
-
                             for (const plat of platforms) {
                                 const isHorizOverlap = newPlat.left < plat.right + 50 && newPlat.right > plat.left - 50;
                                 const isVertOverlap = newPlat.top < plat.bottom + 70 && newPlat.bottom > plat.top - 70;
@@ -2115,48 +2432,22 @@
                         }
                     }
                     platforms = platforms.filter(p => reachableSet.has(p));
-
-                    const isBossLevel = level === 10; 
-                    const npcCount = Math.min(3 + Math.floor(difficulty * 1.5), 35);
-                    const npcSpeed = 0.8 + difficulty * 0.25;
-                    const cappedNpcSpeed = Math.min(npcSpeed, 5.5);
-                    const requiredHits = Math.ceil(7 * Math.pow(1.98329, level - 1));
-
-                    const shuffledPlatforms = [...platforms].sort(() => Math.random() - 0.5);
-                    let npcsToPlace = npcCount;
-                    let bossPlaced = false;
-                    
-                    if (isBossLevel) {
-                        const nx = ground.left + GAME_WIDTH / 2;
-                        const ny = ground.top - 34 * 4;
-                        npcs.push(new NPC(nx, ny, ground, cappedNpcSpeed * 0.7, requiredHits * 15, true));
-                        bossPlaced = true;
-                        npcsToPlace--;
-                    }
-
-                    for (const plat of shuffledPlatforms) {
-                        if (npcsToPlace <= 0) break;
-                        if (plat === ground && Math.random() > 0.5) continue;
-
-                        const npcsOnThisPlat = plat.width > 100 ? Math.min(npcsToPlace, 1 + Math.floor(Math.random() * 2)) : 1;
-                        for (let n = 0; n < npcsOnThisPlat && npcsToPlace > 0; n++) {
-                            const nx = plat.left + 10 + Math.random() * (plat.width - 40); const ny = plat.top - 34;
-                            npcs.push(new NPC(nx, ny, plat, cappedNpcSpeed + Math.random() * 1.5, requiredHits));
-                            npcsToPlace--;
-                        }
-                    }
-
-                    while (npcsToPlace > 0) {
-                        const nx = ground.left + 50 + Math.random() * (ground.width - 100);
-                        const ny = ground.top - 34;
-                        npcs.push(new NPC(nx, ny, ground, cappedNpcSpeed + Math.random() * 1.5, requiredHits));
-                        npcsToPlace--;
-                    }
-                    npcsRemaining = npcs.length;
                 }
 
                 if (!player) player = new Player(80, groundY - 40);
-                else { player.x = 80; player.y = groundY - 40; player.vy = 0; player.vx = 0; player.isGrounded = true; player.invincible = true; player.invincibleTimer = 60; player.attackCooldown = 0; player.jumpChargeFrames = 0; player.fireChargeFrames = 0; player.lightningChargeFrames = 0; player.teleportChargeFrames = 0; player.teleportCooldown = 0; player.summonCooldown = 0; player.summonChargeFrames = 0; }
+                else { 
+                    player.x = 80; player.y = groundY - 40; player.vy = 0; player.vx = 0; player.isGrounded = true; 
+                    player.invincible = true; player.invincibleTimer = 60; player.attackCooldown = 0; 
+                    player.jumpChargeFrames = 0; player.fireChargeFrames = 0; player.lightningChargeFrames = 0; 
+                    player.teleportChargeFrames = 0; player.teleportCooldown = 0; player.summonCooldown = 0; player.summonChargeFrames = 0; 
+                    player.timeCooldown = 0; player.timeChargeFrames = 0;
+                }
+
+                if (POWER_DESCS[lvl] && !hasSeenPower[lvl]) {
+                    activePowerSymbol = new PowerSymbol(player.x + 350, ground.top - 50, lvl);
+                } else {
+                    spawnEnemiesForLevel(lvl);
+                }
             }
 
             // ─────────────────────────────────────
@@ -2220,9 +2511,12 @@
 
                 ctx.fillStyle = '#ffffff'; ctx.font = 'bold 16px "Segoe UI", "Press Start 2P", system-ui, sans-serif'; ctx.textAlign = 'left';
                 
-                let dmgMultVal = 1 + (level - 1) * 0.2;
+                let dmgMultVal = Math.pow(1.5, level - 1);
                 let lvlText = `🌍 Level ${level}`;
-                if (dmgMultVal > 1) lvlText += ` [DMGx${dmgMultVal.toFixed(1)}]`;
+                if (dmgMultVal > 1) {
+                    let dispVal = dmgMultVal < 1000 ? dmgMultVal.toFixed(1) : formatHP(dmgMultVal);
+                    lvlText += ` [DMGx${dispVal}]`;
+                }
                 ctx.fillText(lvlText, 15, 27);
 
                 ctx.textAlign = 'center'; ctx.fillStyle = '#ff9f43';
@@ -2240,13 +2534,28 @@
                 ctx.fillText(`Lives: ${playerLives}`, 15, 78);
 
                 if (player) {
+                    // Mana Bar
+                    const manaW = 200; const manaH = 12;
+                    ctx.fillStyle = 'rgba(0,50,100,0.5)'; ctx.fillRect(15, 88, manaW, manaH);
+                    ctx.fillStyle = '#00aaff'; ctx.fillRect(15, 88, manaW * (player.mana / player.maxMana), manaH);
+                    ctx.strokeStyle = 'rgba(0,255,255,0.8)'; ctx.lineWidth = 1; ctx.strokeRect(15, 88, manaW, manaH);
+                    ctx.fillStyle = '#fff'; ctx.font = '10px "Segoe UI", system-ui, sans-serif'; ctx.textAlign = 'left';
+                    ctx.fillText(`Mana: ${Math.floor(player.mana)} / ${Math.floor(player.maxMana)}`, 15, 112);
+
+                    if (player.timeCooldown > 0 && (level >= 20 || isDevMode)) {
+                        const tcPercent = player.timeCooldown / 300;
+                        const cdX = GAME_WIDTH - 80; const cdY = 100;
+                        ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(cdX, cdY, 60, 6);
+                        ctx.fillStyle = '#88ccff'; ctx.fillRect(cdX, cdY, 60 * (1 - tcPercent), 6);
+                        ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.fillText('TIME', cdX - 4, cdY + 6);
+                    }
+
                     if (player.teleportCooldown > 0 && (level >= 5 || isDevMode)) {
                         const tpPercent = player.teleportCooldown / 90;
                         const cdX = GAME_WIDTH - 80; const cdY = 70;
                         ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(cdX, cdY, 60, 6);
                         ctx.fillStyle = '#aa00ff'; ctx.fillRect(cdX, cdY, 60 * (1 - tpPercent), 6);
-                        ctx.fillStyle = '#fff'; ctx.font = '10px "Segoe UI", system-ui, sans-serif'; ctx.textAlign = 'right';
-                        ctx.fillText('TP CD', cdX - 4, cdY + 6);
+                        ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.fillText('TP CD', cdX - 4, cdY + 6);
                     }
 
                     if (player.summonCooldown > 0 && (level >= 15 || isDevMode)) {
@@ -2254,8 +2563,7 @@
                         const cdX = GAME_WIDTH - 80; const cdY = 85;
                         ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(cdX, cdY, 60, 6);
                         ctx.fillStyle = '#4d9e5b'; ctx.fillRect(cdX, cdY, 60 * (1 - smPercent), 6);
-                        ctx.fillStyle = '#fff'; ctx.font = '10px "Segoe UI", system-ui, sans-serif'; ctx.textAlign = 'right';
-                        ctx.fillText('SM CD', cdX - 4, cdY + 6);
+                        ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.fillText('SM CD', cdX - 4, cdY + 6);
                     }
 
                     if (player.attackCooldown > 0) {
@@ -2263,25 +2571,25 @@
                         const cdX = GAME_WIDTH - 80; const cdY = 55;
                         ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(cdX, cdY, 60, 6);
                         ctx.fillStyle = '#ff6b35'; ctx.fillRect(cdX, cdY, 60 * (1 - cdPercent), 6);
-                        ctx.fillStyle = '#fff'; ctx.font = '10px "Segoe UI", system-ui, sans-serif'; ctx.textAlign = 'right';
-                        ctx.fillText('CD', cdX - 4, cdY + 6);
+                        ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.fillText('CD', cdX - 4, cdY + 6);
                     }
                     
-                    const chargeFrames = Math.max(player.fireChargeFrames, player.lightningChargeFrames, player.teleportChargeFrames, player.summonChargeFrames);
+                    const chargeFrames = Math.max(player.fireChargeFrames, player.lightningChargeFrames, player.teleportChargeFrames, player.summonChargeFrames, player.timeChargeFrames);
                     if (chargeFrames > 0) {
-                        const maxBarFrames = 180;
-                        const p = Math.min(1, chargeFrames / maxBarFrames);
+                        let p = 0;
+                        let cdColor = '#fff';
+                        if (player.timeChargeFrames > 0) { p = player.timeChargeFrames / COSTS.time.maxFrames; cdColor = '#88ccff'; }
+                        else if (player.teleportChargeFrames > 0) { p = player.teleportChargeFrames / COSTS.teleport.maxFrames; cdColor = '#aa00ff'; }
+                        else if (player.summonChargeFrames > 0) { p = player.summonChargeFrames / COSTS.summon.maxFrames; cdColor = '#4d9e5b'; }
+                        else if (player.lightningChargeFrames > 0) { p = player.lightningChargeFrames / COSTS.lightning.maxFrames; cdColor = '#00ffff'; }
+                        else { p = player.fireChargeFrames / COSTS.fire.maxFrames; cdColor = '#ffaa00'; }
+
+                        p = Math.min(1, Math.max(0, p));
                         const cdX = GAME_WIDTH - 150; const cdY = 55;
                         ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(cdX, cdY, 50, 6);
-                        
-                        if (player.teleportChargeFrames > 0) ctx.fillStyle = '#aa00ff';
-                        else if (player.summonChargeFrames > 0) ctx.fillStyle = '#4d9e5b';
-                        else if (player.lightningChargeFrames > 0) ctx.fillStyle = '#00ffff';
-                        else ctx.fillStyle = '#ffaa00'; 
-                        
+                        ctx.fillStyle = cdColor;
                         ctx.fillRect(cdX, cdY, 50 * p, 6);
-                        ctx.fillStyle = '#fff'; ctx.font = '10px "Segoe UI", system-ui, sans-serif'; ctx.textAlign = 'right';
-                        ctx.fillText('PWR', cdX - 4, cdY + 6);
+                        ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.fillText('PWR', cdX - 4, cdY + 6);
                     }
                     
                     if (player.jumpChargeFrames > 0) {
@@ -2289,20 +2597,8 @@
                         const cdX = GAME_WIDTH - 220; const cdY = 55;
                         ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(cdX, cdY, 50, 6);
                         ctx.fillStyle = '#ffffff'; ctx.fillRect(cdX, cdY, 50 * p, 6);
-                        ctx.fillStyle = '#fff'; ctx.font = '10px "Segoe UI", system-ui, sans-serif'; ctx.textAlign = 'right';
-                        ctx.fillText('JMP', cdX - 4, cdY + 6);
+                        ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.fillText('JMP', cdX - 4, cdY + 6);
                     }
-
-                    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(15, 95, 175, 20);
-                    let label = "READY"; let color = "#fff";
-                    if (player.summonChargeFrames > 0) { label = "CHARGING SUMMON"; color = "#4d9e5b"; }
-                    else if (player.teleportChargeFrames > 0) { label = "CHARGING TELEPORT"; color = "#aa00ff"; }
-                    else if (player.lightningChargeFrames > 0) { label = "CHARGING LIGHTNING"; color = "#00ffff"; }
-                    else if (player.fireChargeFrames > 0) { label = "CHARGING FIRE"; color = "#ffaa00"; }
-                    
-                    ctx.fillStyle = color;
-                    ctx.font = '10px "Press Start 2P"'; ctx.textAlign = 'left';
-                    ctx.fillText(label, 20, 109);
                 }
             }
 
@@ -2324,20 +2620,31 @@
             }
 
             function drawVictory(ctx) {
-                ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-                ctx.fillStyle = '#00ffff'; ctx.font = 'bold 36px "Segoe UI", "Press Start 2P", system-ui, sans-serif'; ctx.textAlign = 'center';
-                ctx.fillText('🌟 Congratulations, you freed the humans realm from the demons invasion 🌟', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20);
-                ctx.fillStyle = '#fff'; ctx.font = '18px "Segoe UI", system-ui, sans-serif';
-                ctx.fillText(`Final Score: ${score}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 30);
+                ctx.fillStyle = 'rgba(20, 15, 10, 0.9)'; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+                ctx.fillStyle = '#ffd700'; ctx.font = 'bold 30px "MedievalSharp", "Cinzel", serif'; ctx.textAlign = 'center';
+                ctx.fillText('🌟 Congratulations, you freed the human', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40);
+                ctx.fillText('realm from the demon invasion! 🌟', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 5);
+                ctx.fillStyle = '#fff'; ctx.font = '18px "Georgia", serif';
+                ctx.fillText(`Final Score: ${score}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 40);
                 ctx.fillStyle = '#ff9f43';
-                ctx.fillText('Tap or press SPACE to return to Menu', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 75);
+                ctx.fillText('Tap or press SPACE to return to Menu', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 85);
+            }
+
+            function returnToMenu() {
+                level = 1; score = 0; totalDemonsKilled = 0;
+                playerHealth = maxHealth; playerLives = 5; player = null;
+                platforms = []; npcs = []; enemyWizards = []; helpers = []; projectiles = []; bossProjectiles = []; particles = []; items = []; manaOrbs = []; powerAbsorbParticles = [];
+                gameState = STATE.MENU; 
+                levelTransitionTimer = 0; gameOverTimer = 0; shakeTimer = 0; shakeIntensity = 0; timeFreezeDuration = 0; timeStopIntroTimer = 0;
+                document.getElementById('main-menu').style.display = 'flex';
+                Object.keys(hasSeenPower).forEach(k => delete hasSeenPower[k]); 
             }
 
             // ─────────────────────────────────────
             // MAIN GAME LOOP
             // ─────────────────────────────────────
             function update() {
-                if (gameState === STATE.MENU || gameState === STATE.STORY || gameState === STATE.STORY_LEVEL_20) {
+                if (gameState === STATE.MENU || gameState === STATE.STORY || gameState === STATE.STORY_LEVEL_20 || gameState === STATE.POWER_INFO) {
                     return;
                 }
 
@@ -2346,11 +2653,25 @@
                     if (c.x < -200) c.x = WORLD_WIDTH + 200;
                 }
 
+                if (gameState === STATE.POWER_ABSORB) {
+                    powerAbsorbTimer++;
+                    for (let p of powerAbsorbParticles) p.update(player.centerX, player.centerY);
+                    
+                    if (powerAbsorbTimer > 120) { 
+                        hasSeenPower[activePowerSymbol.level] = true;
+                        showPowerScreen(activePowerSymbol.level);
+                        activePowerSymbol = null;
+                        powerAbsorbParticles = []; // FIX: Clear particles so they aren't permanently drawn on the screen
+                    }
+                    return; // Pause rest of world
+                }
+
                 if (gameState === STATE.GAME_OVER || gameState === STATE.VICTORY) {
                     gameOverTimer--;
                     if (shakeTimer > 0) shakeTimer--;
-                    if ((isJumpInput() || mousePressed || keys['enter'] || keys['KeyR'] || mobJump || mobFire || mobLightning || mobTeleport) && gameOverTimer < 150) {
-                        restartGame();
+                    if ((isJumpInput() || mousePressed || keys['enter'] || keys['KeyR'] || mobJump || mobFire || mobLightning || mobTeleport || mobTime) && gameOverTimer < 150) {
+                        if (gameState === STATE.VICTORY) returnToMenu();
+                        else restartGame();
                     }
                     particles.forEach(p => p.update()); particles = particles.filter(p => !p.dead);
                     return;
@@ -2377,9 +2698,19 @@
                     return;
                 }
 
-                player.update(platforms);
+                if (timeStopIntroTimer > 0) timeStopIntroTimer--;
+                if (timeFreezeDuration > 0 && timeStopIntroTimer <= 0) timeFreezeDuration--;
 
-                if (!isTimeFrozen) {
+                if (activePowerSymbol) activePowerSymbol.update(player);
+
+                player.update(platforms);
+                
+                for(let m = manaOrbs.length - 1; m >= 0; m--) {
+                    manaOrbs[m].update(player);
+                    if (manaOrbs[m].dead) manaOrbs.splice(m, 1);
+                }
+
+                if (!isTimeFrozen && timeFreezeDuration <= 0 && timeStopIntroTimer <= 0) {
                     for (let i = helpers.length - 1; i >= 0; i--) {
                         helpers[i].update(platforms, npcs, enemyWizards);
                         
@@ -2411,7 +2742,6 @@
                         }
                     }
 
-                    for (const proj of projectiles) proj.update();
                     for (let b = bossProjectiles.length - 1; b >= 0; b--) {
                         bossProjectiles[b].update();
                         
@@ -2426,97 +2756,100 @@
                     }
 
                     for (const npc of npcs) npc.update(player);
-                    for (const ew of enemyWizards) ew.update(platforms, player);
+                    for (const ew of enemyWizards) ew.update(platforms, player, npcs, enemyWizards); 
+                }
 
-                    // PROJECTILE COLLISION
-                    for (let f = projectiles.length - 1; f >= 0; f--) {
-                        const proj = projectiles[f];
-                        const projBounds = proj.getBounds();
-                        let projectileDead = false;
+                // Friendly Projectiles always update (you can shoot while time is frozen!)
+                // Enemy projectiles freeze if time is frozen.
+                for (let f = projectiles.length - 1; f >= 0; f--) {
+                    const proj = projectiles[f];
+                    if (proj.isEnemy && (isTimeFrozen || timeFreezeDuration > 0 || timeStopIntroTimer > 0)) continue; 
+                    
+                    proj.update();
+                    const projBounds = proj.getBounds();
+                    let projectileDead = false;
 
-                        if (proj.isEnemy) {
-                            // Enemy Projectile hits Player
-                            if (!player.invincible && projBounds.left < player.getBounds().right && projBounds.right > player.getBounds().left && projBounds.top < player.getBounds().bottom && projBounds.bottom > player.getBounds().top) {
-                                player.takeDamage();
-                                projectiles.splice(f, 1);
-                                projectileDead = true;
-                            }
-                            
-                            // Enemy Projectile hits Helpers
-                            if (!projectileDead) {
-                                for (let h of helpers) {
-                                    if (!h.invincible && projBounds.left < h.getBounds().right && projBounds.right > h.getBounds().left && projBounds.top < h.getBounds().bottom && projBounds.bottom > h.getBounds().top) {
-                                        h.takeDamage(proj.damage);
-                                        projectiles.splice(f, 1);
-                                        projectileDead = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        } else {
-                            // Player Projectile hits NPCs
-                            let targetHitList = [...npcs, ...enemyWizards];
-                            for (let n = targetHitList.length - 1; n >= 0; n--) {
-                                const npc = targetHitList[n];
-                                if (proj.hitNPCs.has(npc)) continue;
-
-                                const npcBounds = npc.getBounds();
-                                if (projBounds.left < npcBounds.right && projBounds.right > npcBounds.left && projBounds.top < npcBounds.bottom && projBounds.bottom > npcBounds.top) {
-                                    
-                                    if (npc.type === 'red_boss') npc.hp -= 1; // Exactly 1 damage mathematically (10 hits)
-                                    else npc.hp -= proj.damage;
-                                    
-                                    proj.hitNPCs.add(npc);
-                                    proj.pierceRemaining--;
-                                    
-                                    if (npc.hp <= 0) {
-                                        totalDemonsKilled++;
-                                        const pCount = Math.min(100, 15 + proj.radius);
-                                        spawnParticles(npc.centerX, npc.centerY, pCount, ['#ff6b35', '#ff9f43', '#ffcc02', '#ffffff', '#ff4400'], 4 + proj.radius/10, 35, 3 + proj.radius/15);
-                                        spawnParticles(npc.centerX, npc.centerY, 8, ['#ff0000', '#ff4444'], 4, 20, 3);
-                                        
-                                        if (totalDemonsKilled % 10 === 0) {
-                                            items.push(new Item(npc.centerX - 8, npc.centerY, 'life')); 
-                                        } else if (totalDemonsKilled % 2 === 0) {
-                                            items.push(new Item(npc.centerX - 8, npc.centerY, 'heart')); 
-                                        }
-
-                                        let indexInNpcs = npcs.indexOf(npc);
-                                        if (indexInNpcs > -1) npcs.splice(indexInNpcs, 1);
-                                        else {
-                                            let indexInEw = enemyWizards.indexOf(npc);
-                                            if (indexInEw > -1) enemyWizards.splice(indexInEw, 1);
-                                        }
-
-                                        score += (npc.isBoss ? 5000 : 100) + level * 10; 
-                                        npcsRemaining = npcs.length + enemyWizards.length;
-                                        shakeTimer = 8 + Math.min(20, proj.radius/4); 
-                                        shakeIntensity = 4 + Math.min(10, proj.radius/10); 
-                                        sfxHit(); 
-                                    } else {
-                                        npc.damageFlashTimer = 12;
-                                        spawnParticles(npc.centerX, npc.centerY, 8, ['#ffffff', '#ff4444', '#fff'], 4, 15, 2);
-                                        sfxHit();
-                                    }
-                                    
-                                    if (proj.pierceRemaining <= 0) {
-                                        projectiles.splice(f, 1);
-                                        projectileDead = true;
-                                        break;
-                                    }
+                    if (proj.isEnemy) {
+                        if (!player.invincible && projBounds.left < player.getBounds().right && projBounds.right > player.getBounds().left && projBounds.top < player.getBounds().bottom && projBounds.bottom > player.getBounds().top) {
+                            player.takeDamage();
+                            projectiles.splice(f, 1);
+                            projectileDead = true;
+                        }
+                        if (!projectileDead) {
+                            for (let h of helpers) {
+                                if (!h.invincible && projBounds.left < h.getBounds().right && projBounds.right > h.getBounds().left && projBounds.top < h.getBounds().bottom && projBounds.bottom > h.getBounds().top) {
+                                    h.takeDamage(proj.damage);
+                                    projectiles.splice(f, 1);
+                                    projectileDead = true;
+                                    break;
                                 }
                             }
                         }
-                        
-                        if (projectileDead) continue;
-                        
-                        if (proj.x < -300 || proj.x > WORLD_WIDTH + 300) {
-                            projectiles.splice(f, 1);
-                            if (proj.type === 'fireball') spawnParticles(proj.x, proj.y, 5, ['#ffaa00', '#ff6600'], 3, 10, 3);
-                            else spawnParticles(proj.x, proj.y, 5, ['#00ffff', '#ffffff'], 3, 10, 3);
+                    } else {
+                        let targetHitList = [...npcs, ...enemyWizards];
+                        for (let n = targetHitList.length - 1; n >= 0; n--) {
+                            const npc = targetHitList[n];
+                            if (proj.hitNPCs.has(npc)) continue;
+
+                            const npcBounds = npc.getBounds();
+                            if (projBounds.left < npcBounds.right && projBounds.right > npcBounds.left && projBounds.top < npcBounds.bottom && projBounds.bottom > npcBounds.top) {
+                                
+                                npc.hp -= proj.damage;
+                                proj.hitNPCs.add(npc);
+                                proj.pierceRemaining--;
+                                
+                                if (npc.hp <= 0) {
+                                    totalDemonsKilled++;
+                                    const pCount = Math.min(100, 15 + proj.radius);
+                                    spawnParticles(npc.centerX, npc.centerY, pCount, ['#ff6b35', '#ff9f43', '#ffcc02', '#ffffff', '#ff4400'], 4 + proj.radius/10, 35, 3 + proj.radius/15);
+                                    spawnParticles(npc.centerX, npc.centerY, 8, ['#ff0000', '#ff4444'], 4, 20, 3);
+                                    
+                                    if (totalDemonsKilled % 10 === 0) items.push(new Item(npc.centerX - 8, npc.centerY, 'life')); 
+                                    else if (totalDemonsKilled % 2 === 0) items.push(new Item(npc.centerX - 8, npc.centerY, 'heart')); 
+
+                                    // Drop Mana Orbs
+                                    let amt = npc.isBoss ? 500 : (npc.type === 'corrupted_helper' ? 1000 : 50);
+                                    let cnt = npc.isBoss ? 20 : (npc.type === 'corrupted_helper' ? 40 : 5);
+                                    if (npc.type === 'red_boss') { amt = 2000; cnt = 50; }
+                                    for(let o=0; o<cnt; o++) manaOrbs.push(new ManaOrb(npc.centerX, npc.centerY, amt/cnt));
+
+                                    let indexInNpcs = npcs.indexOf(npc);
+                                    if (indexInNpcs > -1) npcs.splice(indexInNpcs, 1);
+                                    else {
+                                        let indexInEw = enemyWizards.indexOf(npc);
+                                        if (indexInEw > -1) enemyWizards.splice(indexInEw, 1);
+                                    }
+
+                                    score += (npc.isBoss ? 5000 : 100) + level * 10; 
+                                    npcsRemaining = npcs.length + enemyWizards.length;
+                                    shakeTimer = 8 + Math.min(20, proj.radius/4); 
+                                    shakeIntensity = 4 + Math.min(10, proj.radius/10); 
+                                    sfxHit(); 
+                                } else {
+                                    npc.damageFlashTimer = 12;
+                                    spawnParticles(npc.centerX, npc.centerY, 8, ['#ffffff', '#ff4444', '#fff'], 4, 15, 2);
+                                    sfxHit();
+                                }
+                                
+                                if (proj.pierceRemaining <= 0) {
+                                    projectiles.splice(f, 1);
+                                    projectileDead = true;
+                                    break;
+                                }
+                            }
                         }
                     }
+                    
+                    if (projectileDead) continue;
+                    
+                    if (proj.x < -300 || proj.x > WORLD_WIDTH + 300) {
+                        projectiles.splice(f, 1);
+                        if (proj.type === 'fireball') spawnParticles(proj.x, proj.y, 5, ['#ffaa00', '#ff6600'], 3, 10, 3);
+                        else spawnParticles(proj.x, proj.y, 5, ['#00ffff', '#ffffff'], 3, 10, 3);
+                    }
+                }
 
+                if (!isTimeFrozen && timeFreezeDuration <= 0 && timeStopIntroTimer <= 0) {
                     for (let i = items.length - 1; i >= 0; i--) {
                         items[i].update(platforms);
                         const pBounds = player.getBounds();
@@ -2533,8 +2866,7 @@
                             items.splice(i, 1);
                         }
                     }
-
-                } // End !isTimeFrozen
+                } 
 
                 if (!player.invincible) {
                     const pBounds = player.getBounds();
@@ -2560,6 +2892,10 @@
                         if (totalDemonsKilled % 10 === 0) items.push(new Item(npc.centerX - 8, npc.centerY, 'life')); 
                         else if (totalDemonsKilled % 2 === 0) items.push(new Item(npc.centerX - 8, npc.centerY, 'heart')); 
 
+                        let amt = npc.isBoss ? 500 : (npc.type === 'corrupted_helper' ? 1000 : 50);
+                        let cnt = npc.isBoss ? 20 : (npc.type === 'corrupted_helper' ? 40 : 5);
+                        for(let o=0; o<cnt; o++) manaOrbs.push(new ManaOrb(npc.centerX, npc.centerY, amt/cnt));
+
                         npcs.splice(i, 1);
                         score += (npc.isBoss ? 1000 : 100) + level * 10; 
                         npcsRemaining = npcs.length + enemyWizards.length;
@@ -2571,17 +2907,42 @@
                         const ew = enemyWizards[i];
                         totalDemonsKilled++;
                         spawnParticles(ew.centerX, ew.centerY, 40, ['#aa00ff', '#ff00ff', '#ffffff', '#ff4400'], 8, 35, 5);
+
+                        let amt = ew.isBoss ? 2000 : 1000;
+                        let cnt = ew.isBoss ? 50 : 40;
+                        for(let o=0; o<cnt; o++) manaOrbs.push(new ManaOrb(ew.centerX, ew.centerY, amt/cnt));
+
                         enemyWizards.splice(i, 1);
                         score += (ew.isBoss ? 5000 : 200) + level * 10; 
                         npcsRemaining = npcs.length + enemyWizards.length;
                     }
                 }
 
-                if (npcs.length === 0 && enemyWizards.length === 0 && gameState === STATE.PLAYING) {
-                    if (!isDevMode || devAutoLevel) {
-                        gameState = STATE.LEVEL_COMPLETE; levelTransitionTimer = 120; sfxLevelUp();
-                        spawnParticles(player.centerX, player.centerY, 40, ['#ffd700', '#ffaa00', '#ffffff', '#ffff00', '#ff8800'], 10, 50, 7);
-                        shakeTimer = 20; shakeIntensity = 5;
+                // Level Complete or Boss Spawn check
+                if (npcs.length === 0 && enemyWizards.length === 0 && gameState === STATE.PLAYING && !activePowerSymbol) {
+                    if (level === 20 && !bossSpawned) {
+                        bossSpawned = true;
+                        let spawnPlat = platforms[0];
+                        let scalingFactor = Math.pow(1.5, 20 - 1);
+                        let demonHP = 140 * scalingFactor;
+
+                        enemyWizards.push(new EnemyWizard(GAME_WIDTH + 150, spawnPlat.top - 80, spawnPlat, 'red_boss', demonHP * 20)); 
+                        npcsRemaining = 1;
+                        shakeTimer = 30; 
+                        shakeIntensity = 8;
+                        sfxPowerThreshold();
+                    } else if (!isDevMode || devAutoLevel) {
+                        if (level === 20 && bossSpawned) {
+                            gameState = STATE.VICTORY;
+                            gameOverTimer = 180;
+                            sfxLevelUp();
+                        } else {
+                            gameState = STATE.LEVEL_COMPLETE; 
+                            levelTransitionTimer = 120; 
+                            sfxLevelUp();
+                            spawnParticles(player.centerX, player.centerY, 40, ['#ffd700', '#ffaa00', '#ffffff', '#ffff00', '#ff8800'], 10, 50, 7);
+                            shakeTimer = 20; shakeIntensity = 5;
+                        }
                     }
                 }
 
@@ -2592,7 +2953,7 @@
             function render() {
                 ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
                 
-                if (gameState === STATE.STORY || gameState === STATE.STORY_LEVEL_20 || gameState === STATE.MENU) {
+                if (gameState === STATE.STORY || gameState === STATE.STORY_LEVEL_20 || gameState === STATE.MENU || gameState === STATE.POWER_INFO) {
                     drawBackground(ctx, 0);
                     return;
                 }
@@ -2614,7 +2975,10 @@
                 ctx.translate(-cameraX + shakeX, shakeY);
                 
                 drawBackground(ctx, cameraX);
+                
                 for (const plat of platforms) plat.draw(ctx);
+                if (activePowerSymbol) activePowerSymbol.draw(ctx);
+                for (const p of powerAbsorbParticles) p.draw(ctx);
                 for (const item of items) item.draw(ctx);
                 for (const helper of helpers) helper.draw(ctx);
                 for (const npc of npcs) npc.draw(ctx);
@@ -2622,9 +2986,33 @@
                 for (const proj of projectiles) proj.draw(ctx);
                 for (const bp of bossProjectiles) bp.draw(ctx);
                 for (const p of particles) p.draw(ctx);
+                for (const m of manaOrbs) m.draw(ctx);
+
                 if (player && gameState !== STATE.GAME_OVER) player.draw(ctx);
                 
+                // --- TIME FREEZE VISUAL OVERRIDE SHOCKWAVE ---
+                if (timeStopIntroTimer > 0) {
+                    const p = 1 - (timeStopIntroTimer / 60); 
+                    const radius = p * GAME_WIDTH * 1.5;
+                    const wavePhase = Math.floor(p * 20) % 2 === 0;
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(player.centerX, player.centerY, radius, 0, Math.PI * 2);
+                    ctx.clip();
+                    ctx.fillStyle = wavePhase ? '#ffffff' : '#000000';
+                    ctx.fillRect(cameraX - shakeX, -shakeY, GAME_WIDTH, GAME_HEIGHT);
+                    ctx.restore();
+                }
+
                 ctx.restore();
+
+                // Fading Blue tint for the remaining freeze duration
+                if (timeFreezeDuration > 0 && timeStopIntroTimer <= 0) {
+                    const fade = Math.min(1, timeFreezeDuration / timeFreezeMax);
+                    ctx.fillStyle = `rgba(0, 80, 150, ${0.4 * fade})`;
+                    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+                }
 
                 drawHUD(ctx);
                 if (gameState === STATE.LEVEL_COMPLETE) drawLevelComplete(ctx);
@@ -2635,8 +3023,9 @@
             function restartGame() {
                 level = 1; score = 0; totalDemonsKilled = 0;
                 playerHealth = maxHealth; playerLives = 5; player = null;
-                platforms = []; npcs = []; enemyWizards = []; helpers = []; projectiles = []; bossProjectiles = []; particles = []; items = [];
-                gameState = STATE.PLAYING; levelTransitionTimer = 0; gameOverTimer = 0; shakeTimer = 0; shakeIntensity = 0;
+                platforms = []; npcs = []; enemyWizards = []; helpers = []; projectiles = []; bossProjectiles = []; particles = []; items = []; manaOrbs = []; activePowerSymbol = null; powerAbsorbParticles = [];
+                gameState = STATE.PLAYING; levelTransitionTimer = 0; gameOverTimer = 0; shakeTimer = 0; shakeIntensity = 0; timeFreezeDuration = 0; timeStopIntroTimer = 0;
+                Object.keys(hasSeenPower).forEach(k => delete hasSeenPower[k]); 
                 generateLevel(1); initAudio();
             }
 
@@ -2688,6 +3077,20 @@
                     document.getElementById('story-overlay').style.display = 'flex';
                 });
                 
+                // Dev Menu UI Toggle
+                let devMenuOpen = true;
+                const devHeader = document.getElementById('dev-header');
+                const devContent = document.getElementById('dev-content');
+                const devToggleIcon = document.getElementById('dev-toggle-icon');
+                
+                devHeader.addEventListener('click', () => {
+                    devMenuOpen = !devMenuOpen;
+                    devContent.style.display = devMenuOpen ? 'flex' : 'none';
+                    devToggleIcon.innerText = devMenuOpen ? '▼' : '▶';
+                    if (devMenuOpen) devHeader.classList.add('border-active');
+                    else devHeader.classList.remove('border-active');
+                });
+                
                 document.getElementById('btn-dev-menu').addEventListener('click', () => {
                     document.getElementById('main-menu').style.display = 'none';
                     document.getElementById('dev-panel').style.display = 'flex';
@@ -2717,12 +3120,12 @@
                     else if (e.target.value === 'helper') hpInput.value = 15;
                     else if (e.target.value === 'red_boss') hpInput.value = 10;
                     else if (e.target.value === 'corrupted_helper') hpInput.value = 15;
-                    else hpInput.value = 7;
+                    else hpInput.value = 140; // Base Demon
                 });
 
                 document.getElementById('btn-spawn').addEventListener('click', () => {
                     if (gameState !== STATE.PLAYING) return;
-                    const hp = parseInt(document.getElementById('dev-hp').value) || 50;
+                    const hp = parseInt(document.getElementById('dev-hp').value) || 140;
                     const type = document.getElementById('dev-type').value;
                     
                     let spawnX = player ? player.centerX + (player.facingRight ? 150 : -150) : 400;
@@ -2732,42 +3135,43 @@
                     let groundPlat = platforms[0]; 
                     
                     if (type === 'helper') {
-                        helpers.push(new Helper(spawnX, groundPlat.top - 80, hp));
+                        helpers.push(new Helper(spawnX, groundPlat.top - 80, hp)); 
                     } else if (type === 'red_boss' || type === 'corrupted_helper') {
-                        let ew = new EnemyWizard(spawnX, groundPlat.top - 80, groundPlat, type);
-                        ew.hp = hp;
-                        ew.maxHp = hp;
+                        let ew = new EnemyWizard(spawnX, groundPlat.top - 80, groundPlat, type, hp * Math.pow(1.5, level - 1));
                         enemyWizards.push(ew);
                         npcsRemaining++;
                     } else {
                         const isBoss = type === 'boss';
-                        npcs.push(new NPC(spawnX, groundPlat.top - (isBoss ? 150 : 80), groundPlat, 2, hp, isBoss));
+                        npcs.push(new NPC(spawnX, groundPlat, 2, hp * Math.pow(1.5, level - 1), isBoss));
                         npcsRemaining++;
                     }
                 });
 
                 document.getElementById('btn-dev-killall').addEventListener('click', () => {
-                    if (gameState !== STATE.PLAYING) return;
-                    npcs.forEach(n => n.hp = 0);
-                    helpers.forEach(h => h.hp = 0);
-                    enemyWizards.forEach(ew => ew.hp = 0);
-                    projectiles = [];
-                    bossProjectiles = [];
+                    score += npcs.length * 100 + enemyWizards.length * 200;
+                    npcs = [];
+                    enemyWizards = [];
+                    npcsRemaining = 0;
                 });
 
-                document.getElementById('btn-dev-freeze').addEventListener('click', (e) => {
+                document.getElementById('btn-dev-freeze').addEventListener('click', () => {
                     isTimeFrozen = !isTimeFrozen;
-                    e.target.innerText = isTimeFrozen ? "Unfreeze Time" : "Freeze Time";
-                    e.target.style.background = isTimeFrozen ? "#ffaa00" : "#00ffff";
+                    document.getElementById('btn-dev-freeze').style.background = isTimeFrozen ? '#ffaa00' : '#00ffff';
+                    document.getElementById('btn-dev-freeze').innerText = isTimeFrozen ? 'Unfreeze Time' : 'Freeze Time';
                 });
-                
-                document.getElementById('dev-progression').addEventListener('change', (e) => devAutoLevel = e.target.checked);
-                document.getElementById('dev-power').addEventListener('input', (e) => devPowerMult = Math.min(10000, Math.max(1, parseInt(e.target.value) || 1)));
+
+                document.getElementById('dev-progression').addEventListener('change', (e) => {
+                    devAutoLevel = e.target.checked;
+                });
+
+                document.getElementById('dev-power').addEventListener('change', (e) => {
+                    devPowerMult = parseFloat(e.target.value) || 1;
+                });
 
                 requestAnimationFrame(gameLoop);
             }
 
-            init();
+            window.onload = init;
         })();
     </script>
 </body>
