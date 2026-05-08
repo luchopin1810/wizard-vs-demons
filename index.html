@@ -101,6 +101,12 @@
             background: #200030;
         }
 
+        #instructions span.key.summon {
+            color: #4d9e5b;
+            border-color: #2b7b3d;
+            background: #1f3a24;
+        }
+
         .pulse-anim {
             animation: pulse-key 1.5s ease-in-out infinite;
         }
@@ -170,6 +176,18 @@
         .mob-btn.teleport:active, .mob-btn.teleport.active {
             background: rgba(170, 0, 255, 0.5);
             border-color: rgba(170, 0, 255, 0.9);
+            color: #fff;
+        }
+
+        .mob-btn.summon {
+            border-color: rgba(77, 158, 91, 0.5);
+            color: rgba(77, 158, 91, 0.8);
+            display: none; 
+        }
+
+        .mob-btn.summon:active, .mob-btn.summon.active {
+            background: rgba(77, 158, 91, 0.5);
+            border-color: rgba(77, 158, 91, 0.9);
             color: #fff;
         }
 
@@ -264,8 +282,17 @@
     </div>
 
     <div id="story-overlay" class="overlay-screen" style="display:none;">
-        <h1>A Invasão dos Demônios</h1>
-        <button class="menu-btn" id="btn-start">Iniciar Missão</button>
+        <h1>The Demon Invasion</h1>
+        <p>
+            The demons are invading the humans realm, the main wizard protector Yakus and his disciples are the only ones who can defeat all of them, and discover why and how they came here.
+        </p>
+        <button class="menu-btn" id="btn-start">Start Mission</button>
+    </div>
+    
+    <div id="level20-overlay" class="overlay-screen" style="display:none;">
+        <h1 style="color: #ff0000;">The Betrayal</h1>
+        <p>So who caused this invasion was one of us...</p>
+        <button class="menu-btn" id="btn-start-level20" style="background: #aa0000; border-color: #550000;">Face the Traitor</button>
     </div>
 
     <div id="game-wrapper">
@@ -284,6 +311,8 @@
                         <option value="demon">Regular Demon</option>
                         <option value="boss">King Demon (Boss)</option>
                         <option value="helper">Helper Wizard</option>
+                        <option value="red_boss">Red Wizard (Boss)</option>
+                        <option value="corrupted_helper">Brown Wizard</option>
                     </select>
                 </label>
                 <label><input type="checkbox" id="dev-progression" checked style="width: auto;"> Auto Level Up</label>
@@ -297,6 +326,7 @@
                     <div class="mob-btn" id="btn-right">▶</div>
                 </div>
                 <div class="mob-panel">
+                    <div class="mob-btn summon pulse-anim" id="btn-summon">🪄</div>
                     <div class="mob-btn teleport pulse-anim" id="btn-teleport">🌀</div>
                     <div class="mob-btn lightning pulse-anim" id="btn-lightning">⚡</div>
                     <div class="mob-btn fire pulse-anim" id="btn-fire">🔥</div>
@@ -314,6 +344,9 @@
             </span>
             <span id="inst-teleport-wrapper" style="display:none;">
                 &nbsp;|&nbsp; <span class="key teleport pulse-anim">HOLD Q</span> Teleport
+            </span>
+            <span id="inst-summon-wrapper" style="display:none;">
+                &nbsp;|&nbsp; <span class="key summon pulse-anim">HOLD R</span> Summon
             </span>
         </div>
     </div>
@@ -443,6 +476,14 @@
                 playBeep(1000, 0.1, 'sine', 0.08, 500);
             }
 
+            function sfxBossFire() {
+                // Lower, deeper fire-like sound effect for King Demon
+                playBeep(80, 0.6, 'sawtooth', 0.15, -60);
+                setTimeout(() => playBeep(60, 0.8, 'square', 0.15, -40), 50);
+                setTimeout(() => playBeep(100, 0.5, 'sawtooth', 0.12, -80), 100);
+                setTimeout(() => playBeep(40, 1.0, 'square', 0.18, -20), 150);
+            }
+
             function sfxCollectHeart() {
                 playBeep(600, 0.1, 'sine', 0.06, 200);
             }
@@ -466,7 +507,7 @@
                     osc.type = 'triangle';
                     osc.frequency.setValueAtTime(120, t);
                     osc.frequency.exponentialRampToValueAtTime(80, t + 0.05);
-                    gain.gain.setValueAtTime(0.015, t); // gentle volume
+                    gain.gain.setValueAtTime(0.015, t); 
                     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
@@ -478,7 +519,7 @@
             // ─────────────────────────────────────
             // GAME STATE
             // ─────────────────────────────────────
-            const STATE = { MENU: 'menu', STORY: 'story', PLAYING: 'playing', LEVEL_COMPLETE: 'levelComplete', GAME_OVER: 'gameOver', VICTORY: 'victory' };
+            const STATE = { MENU: 'menu', STORY: 'story', STORY_LEVEL_20: 'storyLevel20', PLAYING: 'playing', LEVEL_COMPLETE: 'levelComplete', GAME_OVER: 'gameOver', VICTORY: 'victory' };
             let gameState = STATE.MENU;
             let isDevMode = false;
             let devAutoLevel = true;
@@ -505,7 +546,7 @@
             // ─────────────────────────────────────
             const keys = {};
             let mousePressed = false;
-            let mobLeft = false, mobRight = false, mobJump = false, mobFire = false, mobLightning = false, mobTeleport = false;
+            let mobLeft = false, mobRight = false, mobJump = false, mobFire = false, mobLightning = false, mobTeleport = false, mobSummon = false;
 
             window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; keys[e.code] = true; });
             window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; keys[e.code] = false; });
@@ -532,6 +573,7 @@
                 bindBtn('btn-fire', v => mobFire = v);
                 bindBtn('btn-lightning', v => mobLightning = v);
                 bindBtn('btn-teleport', v => mobTeleport = v);
+                bindBtn('btn-summon', v => mobSummon = v);
             }
             if (isMobileDevice) setupMobileControls();
 
@@ -548,6 +590,11 @@
             function isTeleportInput() {
                 if (level < 5 && !isDevMode) return false;
                 return keys['q'] || keys['KeyQ'] || mobTeleport;
+            }
+
+            function isSummonInput() {
+                if (level < 15 && !isDevMode) return false;
+                return keys['r'] || keys['KeyR'] || mobSummon;
             }
 
             // ─────────────────────────────────────
@@ -700,17 +747,17 @@
             // PROJECTILE CLASSES
             // ─────────────────────────────────────
             class Projectile {
-                constructor(x, y, direction, multiplier, type, levelDamageMultiplier = 1) {
+                constructor(x, y, direction, multiplier, type, levelDamageMultiplier = 1, isEnemy = false) {
                     this.x = x; this.y = y; 
                     this.direction = direction;
                     this.multiplier = multiplier;
                     this.type = type; 
+                    this.isEnemy = isEnemy;
                     
                     this.isCharged = multiplier >= 3.0;
-                    this.pierceRemaining = this.isCharged ? 2 : 1; 
+                    this.pierceRemaining = this.isCharged && !isEnemy ? 2 : 1; 
                     this.hitNPCs = new Set(); 
 
-                    // REDUCED BASE SPEED
                     this.speed = type === 'lightning' ? 8 : 4;
                     this.radius = (type === 'lightning' ? 8 : 7) * multiplier;
                     
@@ -808,7 +855,274 @@
             let bossProjectiles = [];
 
             // ─────────────────────────────────────
-            // NPC CLASS
+            // ENEMY WIZARD CLASS (Level 20 Boss & Spawns)
+            // ─────────────────────────────────────
+            class EnemyWizard {
+                constructor(x, y, platform, type) {
+                    this.type = type; // 'red_boss' or 'corrupted_helper'
+                    this.scale = type === 'red_boss' ? 1.5 : 1;
+                    this.width = 28 * this.scale;
+                    this.height = 40 * this.scale;
+                    this.platform = platform;
+                    
+                    this.x = x; this.y = y;
+                    this.vx = 0; this.vy = 0;
+                    
+                    // Base player speed is 2.4. Red wizard is 0.5x slower. Corrupted helper is standard speed.
+                    this.speed = type === 'red_boss' ? (2.4 * 0.5) : 2.4; 
+                    
+                    // Boss life is exactly 10 (200% of player's 5 hearts), takes 1 damage per hit mathematically.
+                    this.hp = type === 'red_boss' ? 10 : 15;
+                    this.maxHp = this.hp;
+                    
+                    this.isBoss = (type === 'red_boss');
+                    this.facingRight = false;
+                    this.isGrounded = false;
+                    
+                    this.spawnTimer = 0;
+                    this.shootTimer = 0;
+                    this.animTimer = 0;
+                    this.eyeBlink = 0;
+                    this.damageFlashTimer = 0;
+                    this.hasBeenAttacked = false;
+
+                    this.gravity = 0.35;
+                    this.jumpForce = -8.5;
+                    this.maxFallSpeed = 8;
+                }
+
+                update(platformsRef, playerRef) {
+                    if (this.eyeBlink > 0) this.eyeBlink--;
+                    if (Math.random() < 0.008) this.eyeBlink = 8;
+                    if (this.damageFlashTimer > 0) this.damageFlashTimer--;
+
+                    if (this.hp < this.maxHp) this.hasBeenAttacked = true;
+
+                    // Find closest target (Player or Friendly Helper)
+                    let target = playerRef;
+                    let minDist = Math.hypot(playerRef.centerX - this.centerX, playerRef.centerY - this.centerY);
+                    for (let h of helpers) {
+                        if (h.hp <= 0) continue;
+                        let d = Math.hypot(h.centerX - this.centerX, h.centerY - this.centerY);
+                        if (d < minDist) {
+                            minDist = d;
+                            target = h;
+                        }
+                    }
+
+                    if (this.type === 'red_boss') {
+                        // Pace back and forth
+                        if (this.facingRight) {
+                            this.vx = this.speed;
+                            if (this.x + this.width > this.platform.right) this.facingRight = false;
+                        } else {
+                            this.vx = -this.speed;
+                            if (this.x < this.platform.left) this.facingRight = true;
+                        }
+
+                        // Face target roughly when shooting
+                        if (this.shootTimer > 100) {
+                            this.facingRight = target.centerX > this.centerX;
+                        }
+
+                        this.spawnTimer++;
+                        if (this.spawnTimer >= 600) { // 10 seconds (60 * 10)
+                            this.spawnTimer = 0;
+                            let r = Math.random();
+                            let cappedNpcSpeed = Math.min(0.3 + 20 * 0.1, 2.5); // level 20 max speed
+                            let requiredHits = Math.ceil(7 * Math.pow(1.98329, 19)); // Level 20 demon hp scaling
+
+                            if (r < 0.33) {
+                                // Spawn Corrupted Helper
+                                enemyWizards.push(new EnemyWizard(this.x, this.y - 20, this.platform, 'corrupted_helper'));
+                            } else if (r < 0.66) {
+                                // Spawn King Demon
+                                npcs.push(new NPC(this.x, this.y - 60, this.platform, cappedNpcSpeed * 0.7, requiredHits * 15, true));
+                            } else {
+                                // Spawn Regular Demon
+                                npcs.push(new NPC(this.x, this.y, this.platform, cappedNpcSpeed + Math.random(), requiredHits));
+                            }
+                            spawnParticles(this.centerX, this.centerY, 30, ['#ff0000', '#000000', '#ffffff'], 6, 30, 4);
+                        }
+
+                        this.shootTimer++;
+                        if (this.shootTimer >= 120) { // 2 seconds
+                            this.shootTimer = 0;
+                            let pType = Math.random() < 0.5 ? 'fireball' : 'lightning';
+                            let mult = 1.0; 
+                            let dir = target.centerX > this.centerX ? 1 : -1;
+                            let levelMult = 1 + (20 - 1) * 0.2; 
+                            const fx = dir > 0 ? this.x + this.width + 2 : this.x - 4;
+                            const fy = this.y + this.height * 0.35;
+                            
+                            if (pType === 'lightning') sfxLightningShoot(mult); else sfxFireShoot(mult);
+                            projectiles.push(new Projectile(fx, fy, dir, mult, pType, levelMult, true));
+                        }
+
+                    } else if (this.type === 'corrupted_helper') {
+                        // AI Follow Target
+                        let dx = target.centerX - this.centerX;
+                        let dist = Math.abs(dx);
+                        
+                        this.facingRight = dx > 0;
+                        if (dist > 150) {
+                            this.vx = (dx > 0 ? 1 : -1) * this.speed;
+                        } else {
+                            this.vx = 0;
+                        }
+
+                        // Simple jump logic if blocked
+                        if (this.isGrounded && this.vx !== 0) {
+                            let blocked = false;
+                            for (let p of platformsRef) {
+                                if (this.y > p.top && this.y < p.bottom) {
+                                    if ((this.facingRight && this.x + this.width + this.vx > p.left && this.x < p.left) ||
+                                        (!this.facingRight && this.x + this.vx < p.right && this.x > p.right)) {
+                                        blocked = true; break;
+                                    }
+                                }
+                            }
+                            if (blocked || Math.random() < 0.01) {
+                                this.vy = this.jumpForce;
+                            }
+                        }
+
+                        // Shoot randomly (25% as powerful as player's level 20 shots)
+                        this.shootTimer++;
+                        if (this.shootTimer > 180 + Math.random() * 120) {
+                            this.shootTimer = 0;
+                            let pType = Math.random() < 0.5 ? 'fireball' : 'lightning';
+                            let dir = this.facingRight ? 1 : -1;
+                            let mult = 0.25; // 25% as powerful size/visual
+                            let levelMult = (1 + (20 - 1) * 0.2) * 0.25; // 25% damage mult
+                            
+                            const fx = dir > 0 ? this.x + this.width + 2 : this.x - 4;
+                            const fy = this.y + this.height * 0.35;
+                            
+                            if (pType === 'lightning') sfxLightningShoot(1.0); else sfxFireShoot(1.0);
+                            projectiles.push(new Projectile(fx, fy, dir, mult, pType, levelMult, true));
+                        }
+                    }
+
+                    if (this.vx !== 0) this.animTimer++; else this.animTimer = 0;
+
+                    this.vy += this.gravity;
+                    if (this.vy > this.maxFallSpeed) this.vy = this.maxFallSpeed;
+                    this.x += this.vx; this.y += this.vy;
+
+                    // Collisions
+                    const bounds = this.getBounds();
+                    this.isGrounded = false;
+                    for (const plat of platformsRef) {
+                        if (this.vy >= 0 && bounds.bottom >= plat.top && bounds.bottom - this.vy <= plat.top + 4 && bounds.right > plat.left + 3 && bounds.left < plat.right - 3) {
+                            this.y = plat.top - this.height; this.vy = 0; this.isGrounded = true;
+                        } else if (bounds.bottom > plat.top + 6 && bounds.top < plat.bottom - 2) {
+                            if (bounds.right > plat.left && bounds.left < plat.left && this.vx > 0) {
+                                this.x = plat.left - this.width; this.vx = 0;
+                            } else if (bounds.left < plat.right && bounds.right > plat.right && this.vx < 0) {
+                                this.x = plat.right; this.vx = 0;
+                            }
+                        }
+                        if (this.vy < 0 && bounds.top <= plat.bottom && bounds.top - this.vy >= plat.bottom - 3 && bounds.right > plat.left + 3 && bounds.left < plat.right - 3) {
+                            this.y = plat.bottom; this.vy = 1;
+                        }
+                    }
+
+                    if (this.x < 0) this.x = 0;
+                    if (this.x + this.width > WORLD_WIDTH) this.x = WORLD_WIDTH - this.width;
+                    if (this.y > GAME_HEIGHT + 60) this.hp = 0;
+                }
+
+                draw(ctx) {
+                    const cx = this.x + this.width / 2;
+                    const bottom = this.y + this.height; 
+                    const walkBob = this.vx !== 0 && this.isGrounded ? Math.sin(this.animTimer * 0.3) * 3 * this.scale : 0;
+                    
+                    let flashColor = null; let flashAlpha = 0;
+                    if (this.damageFlashTimer > 0) {
+                        flashColor = '#ffffff';
+                        flashAlpha = this.damageFlashTimer / 12;
+                    }
+
+                    drawEntityWithFlash(ctx, cx, bottom + walkBob, this.facingRight, this.scale, (sCtx) => {
+                        sCtx.fillStyle = '#1a1a1a';
+                        const footOffset = this.vx !== 0 && this.isGrounded ? Math.sin(this.animTimer * 0.3) * 2 : 0;
+                        sCtx.fillRect(-14, -12, 9, 12);
+                        sCtx.fillRect(5, -12 + footOffset, 9, 12);
+
+                        const bodyGrad = sCtx.createLinearGradient(0, -28, 0, -8);
+                        if (this.type === 'red_boss') {
+                            bodyGrad.addColorStop(0, '#8c1111'); bodyGrad.addColorStop(0.4, '#5e0b0b'); bodyGrad.addColorStop(1, '#3b0707');
+                        } else { // Brown costume
+                            bodyGrad.addColorStop(0, '#6b4a2e'); bodyGrad.addColorStop(0.4, '#4a3320'); bodyGrad.addColorStop(1, '#2e1f13');
+                        }
+                        sCtx.fillStyle = bodyGrad;
+                        sCtx.fillRect(-13, -28, 26, 20);
+
+                        // Belt
+                        sCtx.fillStyle = '#111'; sCtx.fillRect(-13, -12, 26, 4);
+                        sCtx.fillStyle = '#ffaa00'; sCtx.fillRect(-3, -13, 6, 6);
+
+                        const headY = -32; const headR = 9;
+                        const headGrad = sCtx.createRadialGradient(0, headY - 1, headR * 0.15, 0, headY, headR);
+                        // Pale/dark skin
+                        headGrad.addColorStop(0, '#e8b88a'); headGrad.addColorStop(0.7, '#c4946a'); headGrad.addColorStop(1, '#8c5a3a');
+                        sCtx.fillStyle = headGrad;
+                        sCtx.beginPath(); sCtx.arc(0, headY, headR, 0, Math.PI * 2); sCtx.fill();
+
+                        // Hat
+                        sCtx.fillStyle = this.type === 'red_boss' ? '#5e0b0b' : '#4a3320';
+                        sCtx.beginPath(); sCtx.moveTo(-headR - 1, headY + 1); sCtx.lineTo(0, headY - 22); sCtx.lineTo(headR + 1, headY + 1); sCtx.closePath(); sCtx.fill();
+                        sCtx.fillRect(-headR - 5, headY - 1, headR * 2 + 10, 5);
+
+                        // Eyes
+                        if (this.eyeBlink <= 0) {
+                            sCtx.fillStyle = this.type === 'red_boss' ? '#ff0000' : '#ffff00';
+                            sCtx.beginPath(); sCtx.arc(-3, headY - 1, 3.5, 0, Math.PI * 2); sCtx.fill();
+                            sCtx.beginPath(); sCtx.arc(3, headY - 1, 3.5, 0, Math.PI * 2); sCtx.fill();
+                            sCtx.fillStyle = '#000';
+                            sCtx.beginPath(); sCtx.arc(-2, headY, 2, 0, Math.PI * 2); sCtx.fill();
+                            sCtx.beginPath(); sCtx.arc(4, headY, 2, 0, Math.PI * 2); sCtx.fill();
+                        } else {
+                            sCtx.strokeStyle = '#000'; sCtx.lineWidth = 2;
+                            sCtx.beginPath(); sCtx.moveTo(-6, headY - 1); sCtx.lineTo(0, headY - 1); sCtx.stroke();
+                            sCtx.beginPath(); sCtx.moveTo(2, headY - 1); sCtx.lineTo(8, headY - 1); sCtx.stroke();
+                        }
+
+                        // Staff
+                        const staffX = 13; const staffTop = headY - 10; const staffBottom = -2;
+                        sCtx.strokeStyle = '#2a1a0a'; sCtx.lineWidth = 3; sCtx.beginPath(); sCtx.moveTo(staffX, staffTop); sCtx.lineTo(staffX, staffBottom); sCtx.stroke();
+                        
+                        sCtx.fillStyle = this.type === 'red_boss' ? '#ff0000' : '#ffaa00';
+                        sCtx.beginPath(); sCtx.arc(staffX, staffTop, 5, 0, Math.PI * 2); sCtx.fill();
+                    }, flashColor, flashAlpha);
+
+                    if (this.hasBeenAttacked) {
+                        const hpPercent = Math.max(0, this.hp / this.maxHp);
+                        const barW = this.width * 1.5;
+                        const barH = 6;
+                        const bx = this.x + this.width/2 - barW/2;
+                        const by = this.y - 15 - (this.isBoss ? 40 : 0);
+                        
+                        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                        ctx.fillRect(bx, by, barW, barH);
+                        ctx.fillStyle = '#ff0000';
+                        ctx.fillRect(bx, by, barW * hpPercent, barH);
+                        
+                        ctx.fillStyle = '#fff';
+                        ctx.font = '10px "Press Start 2P"';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(`${Math.ceil(Math.max(0, this.hp))}/${Math.ceil(this.maxHp)}`, cx, by - 5);
+                    }
+                }
+                getBounds() { return { left: this.x + 2 * this.scale, right: this.x + this.width - 2 * this.scale, top: this.y + 4 * this.scale, bottom: this.y + this.height }; }
+                get centerX() { return this.x + this.width / 2; }
+                get centerY() { return this.y + this.height / 2; }
+            }
+            let enemyWizards = [];
+
+            // ─────────────────────────────────────
+            // NPC CLASS (Demons)
             // ─────────────────────────────────────
             class NPC {
                 constructor(x, y, platform, speed, requiredHits, isBoss = false) {
@@ -855,18 +1169,14 @@
                     if (this.isBoss) {
                         this.attackTimer++;
                         
-                        // Wait 2 seconds (120 frames), then charge for 4 seconds (240 frames)
-                        if (this.attackTimer < 120) {
+                        if (this.attackTimer > 210) {
+                            this.speedModifier = 0; 
+                            spawnParticles(this.centerX, this.centerY - 50, 2, ['#00aaff', '#ffffff'], 20, 10, 4);
+                        } else {
                             this.speedModifier = 1;
-                        } else if (this.attackTimer < 360) {
-                            this.speedModifier = 0; // Stop moving to charge
-                            
-                            // Visual cue scaling up over the 4 seconds
-                            let chargeRatio = (this.attackTimer - 120) / 240;
-                            if (Math.random() < chargeRatio) {
-                                spawnParticles(this.centerX, this.centerY - 50, 2, ['#00aaff', '#ffffff'], 20 * chargeRatio, 10, 4);
-                            }
-                        } else if (this.attackTimer >= 360) {
+                        }
+
+                        if (this.attackTimer >= 270) {
                             this.attackTimer = 0;
                             let dx = playerRef.centerX - this.centerX;
                             let dy = playerRef.centerY - this.centerY;
@@ -874,9 +1184,8 @@
                             let projSpeed = 8;
                             
                             bossProjectiles.push(new BossProjectile(this.centerX, this.centerY - 40, (dx/dist)*projSpeed, (dy/dist)*projSpeed));
-                            sfxPowerThreshold();
+                            sfxBossFire();
                             
-                            // Massive explosion when releasing the shot
                             spawnParticles(this.centerX, this.centerY - 40, 40, ['#0055ff', '#00aaff', '#ffffff'], 15, 30, 6);
                         }
                     }
@@ -891,7 +1200,18 @@
                     ctx.fillStyle = 'rgba(0,0,0,0.35)';
                     ctx.beginPath(); ctx.ellipse(cx, bottom - 2, this.width / 2, 3 * this.scale, 0, 0, Math.PI * 2); ctx.fill();
 
-                    const flashAlpha = this.damageFlashTimer / 12; 
+                    let flashColor = null;
+                    let flashAlpha = 0;
+
+                    if (this.isBoss && this.attackTimer >= 210 && this.attackTimer < 270) {
+                        flashColor = '#00aaff';
+                        let chargeFrames = this.attackTimer - 210;
+                        flashAlpha = Math.abs(Math.sin(chargeFrames * 0.15)) * 0.5 + 0.2;
+                    } else if (this.damageFlashTimer > 0) {
+                        flashColor = '#ffffff';
+                        flashAlpha = this.damageFlashTimer / 12;
+                    }
+
                     drawEntityWithFlash(ctx, cx, bottom + walkBob, facingRight, this.scale, (sCtx) => {
                         const bw = this.baseWidth;
 
@@ -946,7 +1266,7 @@
                         }
                         sCtx.strokeStyle = '#2a1a0a'; sCtx.lineWidth = 1.5;
                         sCtx.beginPath(); sCtx.arc(0, headY + 4, 5, 0.1, Math.PI - 0.1); sCtx.stroke();
-                    }, '#ff0000', flashAlpha);
+                    }, flashColor, flashAlpha);
 
                     if (this.hasBeenAttacked) {
                         const hpPercent = Math.max(0, this.hp / this.maxHp);
@@ -971,7 +1291,7 @@
                 get centerY() { return this.y + this.height / 2; }
             }
             let npcs = [];
-            let helpers = []; // Array to track Helper Wizards
+            let helpers = []; 
 
             // ─────────────────────────────────────
             // HELPER WIZARD CLASS
@@ -999,7 +1319,6 @@
                     this.animTimer = 0;
                     this.eyeBlink = 0;
 
-                    // AI State
                     this.state = 'idle'; 
                     this.chargeTimer = 0;
                     this.targetCharge = 0;
@@ -1038,17 +1357,19 @@
                     projectiles.push(new Projectile(fx, fy, this.facingRight ? 1 : -1, multiplier, type, levelDamageMultiplier));
                 }
 
-                update(platforms, npcsList) {
+                update(platforms, npcsList, enemyWizardsList) {
                     if (this.eyeBlink > 0) this.eyeBlink--;
                     if (Math.random() < 0.008) this.eyeBlink = 8;
                     if (this.invincible) { this.invincibleTimer--; if (this.invincibleTimer <= 0) this.invincible = false; }
                     if (this.attackCooldown > 0) this.attackCooldown--;
                     if (this.teleportCooldown > 0) this.teleportCooldown--;
 
-                    // AI Logic - Find target
+                    // Find closest valid enemy (NPC or EnemyWizard)
                     let target = null;
                     let minDist = Infinity;
-                    for (let n of npcsList) {
+                    let allEnemies = [...npcsList, ...enemyWizardsList];
+                    for (let n of allEnemies) {
+                        if (n.hp <= 0) continue;
                         let d = Math.hypot(n.centerX - this.centerX, n.centerY - this.centerY);
                         if (d < minDist) { minDist = d; target = n; }
                     }
@@ -1060,13 +1381,13 @@
                         let dy = target.centerY - this.centerY;
                         
                         if (this.state === 'idle' || this.state === 'moving') {
-                            if (this.teleportCooldown <= 0 && Math.random() < 0.05) { // High preference for teleport phasing
+                            if (this.teleportCooldown <= 0 && Math.random() < 0.05) {
                                 this.state = 'teleporting';
                                 this.chargeTimer = 0;
                                 this.targetCharge = 30 + Math.random() * 60; 
                             } else if (this.state === 'idle') {
                                 if (minDist < 200) {
-                                    this.state = 'retreating'; // Retreat and keep a safe distance
+                                    this.state = 'retreating';
                                 } else if (this.attackCooldown <= 0 && minDist < 450 && Math.random() < 0.05) {
                                     this.state = 'attacking';
                                     this.chargeTimer = 0;
@@ -1102,7 +1423,6 @@
                                     }
                                 }
                                 
-                                // Only jump if not blocked above and there's a wall, target height, or randomness
                                 if (!blockedAbove && (blockedHorizontally || (this.state === 'moving' && dy < -50) || Math.random() < 0.01)) {
                                     this.vy = this.jumpForce;
                                 }
@@ -1124,8 +1444,11 @@
                                 this.x = targetX; this.y = target.platform.top - this.height;
                                 
                                 let heldSeconds = this.chargeTimer / 60;
-                                let calculatedTpDmg = 10 * (100 + (heldSeconds * 20)); // 10x stronger than player
-                                target.hp -= calculatedTpDmg * Math.pow(1.2, level - 1);
+                                let calculatedTpDmg = 10 * (100 + (heldSeconds * 20)); // 10x stronger
+                                
+                                if (target.type === 'red_boss') target.hp -= 1; // Boss special reduction
+                                else target.hp -= calculatedTpDmg * Math.pow(1.2, level - 1);
+                                
                                 target.hasBeenAttacked = true;
                                 target.damageFlashTimer = 12;
                                 sfxHit(); sfxTeleport();
@@ -1180,7 +1503,7 @@
 
                     if (this.x < 0) this.x = 0;
                     if (this.x + this.width > WORLD_WIDTH) this.x = WORLD_WIDTH - this.width;
-                    if (this.y > GAME_HEIGHT + 60) this.hp = 0; // Helper dies if falling off
+                    if (this.y > GAME_HEIGHT + 60) this.hp = 0; 
                 }
                 
                 draw(ctx) {
@@ -1209,17 +1532,17 @@
                     drawEntityWithFlash(ctx, cx, bottom + walkBob, this.facingRight, 1, (sCtx) => {
                         sCtx.fillStyle = '#3d2b1a';
                         const footOffset = this.vx !== 0 && this.isGrounded ? Math.sin(this.animTimer * 0.3) * 2 : 0;
-                        sCtx.fillRect(-this.width / 2, -12, 9, 12);
-                        sCtx.fillRect(this.width / 2 - 9, -12 + footOffset, 9, 12);
+                        sCtx.fillRect(-14, -12, 9, 12);
+                        sCtx.fillRect(5, -12 + footOffset, 9, 12);
 
                         const bodyGrad = sCtx.createLinearGradient(0, -28, 0, -8);
                         bodyGrad.addColorStop(0, '#4d9e5b'); bodyGrad.addColorStop(0.4, '#3c8c4a'); bodyGrad.addColorStop(1, '#1f5e2d');
                         sCtx.fillStyle = bodyGrad;
-                        sCtx.fillRect(-this.width / 2 + 1, -28, this.width - 2, 20);
+                        sCtx.fillRect(-13, -28, 26, 20);
 
-                        sCtx.fillStyle = '#5fc06e'; sCtx.fillRect(-this.width / 2 + 1, -28, this.width - 2, 3);
+                        sCtx.fillStyle = '#5fc06e'; sCtx.fillRect(-13, -28, 26, 3);
                         sCtx.fillStyle = '#b8ffc9'; sCtx.fillRect(-2, -18, 4, 10);
-                        sCtx.fillStyle = '#8b6914'; sCtx.fillRect(-this.width / 2 + 1, -12, this.width - 2, 4);
+                        sCtx.fillStyle = '#8b6914'; sCtx.fillRect(-13, -12, 26, 4);
                         sCtx.fillStyle = '#d4a830'; sCtx.fillRect(-3, -13, 6, 6);
 
                         const headY = -32; const headR = 9;
@@ -1242,7 +1565,7 @@
                             sCtx.beginPath(); sCtx.moveTo(-6, headY - 1); sCtx.lineTo(0, headY - 1); sCtx.stroke(); sCtx.beginPath(); sCtx.moveTo(2, headY - 1); sCtx.lineTo(8, headY - 1); sCtx.stroke();
                         }
 
-                        const staffX = this.width / 2 - 1;
+                        const staffX = 13;
                         const staffTop = headY - 10;
                         const staffBottom = -2;
                         sCtx.strokeStyle = '#5c3d1a'; sCtx.lineWidth = 3; sCtx.beginPath(); sCtx.moveTo(staffX, staffTop); sCtx.lineTo(staffX, staffBottom); sCtx.stroke();
@@ -1270,7 +1593,6 @@
                     this.width = 28; this.height = 40;
                     this.vx = 0; this.vy = 0;
                     
-                    // REDUCED BASE SPEED & PHYSICS
                     this.speed = 2.4;
                     this.jumpForce = -8.2; 
                     this.gravity = 0.35;
@@ -1299,6 +1621,10 @@
                     this.wasTeleportInput = false;
                     this.teleportCooldown = 0; 
                     this.teleportChargeFrames = 0;
+
+                    this.wasSummonInput = false;
+                    this.summonCooldown = 0;
+                    this.summonChargeFrames = 0;
                 }
                 
                 update(platforms) {
@@ -1311,6 +1637,7 @@
                     }
                     if (this.attackCooldown > 0) this.attackCooldown--;
                     if (this.teleportCooldown > 0) this.teleportCooldown--;
+                    if (this.summonCooldown > 0) this.summonCooldown--;
 
                     this.vx = 0;
                     if (isLeftInput()) this.vx = -this.speed;
@@ -1327,6 +1654,7 @@
                     const currentFirePressed = isFireInput();
                     const currentLightningPressed = isLightningInput();
                     const currentTeleportPressed = isTeleportInput();
+                    const currentSummonPressed = isSummonInput();
                     
                     if (this.isGrounded) this.coyoteTimer = 5;
                     else if (this.coyoteTimer > 0) this.coyoteTimer--;
@@ -1336,60 +1664,113 @@
                         this.teleportChargeFrames++;
                         if (this.teleportChargeFrames % 20 === 0) sfxLightningCharge(this.teleportChargeFrames);
                     } 
-                    else if (!currentTeleportPressed && this.wasTeleportInput && this.teleportChargeFrames > 0 && this.teleportCooldown <= 0 && npcs.length > 0) {
-                        let closest = npcs[0];
-                        let minDist = Math.hypot(closest.centerX - this.centerX, closest.centerY - this.centerY);
-                        for (let i = 1; i < npcs.length; i++) {
-                            let d = Math.hypot(npcs[i].centerX - this.centerX, npcs[i].centerY - this.centerY);
-                            if (d < minDist) { minDist = d; closest = npcs[i]; }
-                        }
+                    else if (!currentTeleportPressed && this.wasTeleportInput && this.teleportChargeFrames > 0 && this.teleportCooldown <= 0 && (npcs.length > 0 || enemyWizards.length > 0)) {
+                        
+                        let maxPhases = 1;
+                        if (this.teleportChargeFrames >= 180) maxPhases = 4; // Max bar
+                        else if (this.teleportChargeFrames >= 90) maxPhases = 2; // Half bar
 
                         spawnParticles(this.centerX, this.centerY, 30, ['#aa00ff', '#ff00ff', '#ffffff'], 6, 25, 4);
 
-                        let isLeftOfEnemy = this.centerX < closest.centerX;
-                        let offsetX = isLeftOfEnemy ? closest.width/2 + this.width/2 + 10 : -(closest.width/2 + this.width/2 + 10); 
-                        let targetX = closest.centerX + offsetX - this.width / 2;
-                        
-                        targetX = Math.max(closest.platform.left, Math.min(closest.platform.right - this.width, targetX));
-                        
-                        this.x = targetX;
-                        this.y = closest.platform.top - this.height;
-
-                        if (this.x < 0) this.x = 0;
-                        if (this.x + this.width > WORLD_WIDTH) this.x = WORLD_WIDTH - this.width;
-
-                        this.vy = 0;
-                        this.isGrounded = true;
-                        
-                        // DAMAGE LOGIC: 100 base + 20 per second held (capped progressively per level)
                         let heldSeconds = this.teleportChargeFrames / 60;
                         let calculatedTpDmg = 100 + (heldSeconds * 20);
                         let maxTpDmg = 200 + ((level - 1) * 20);
                         let finalTpDmg = Math.min(calculatedTpDmg, maxTpDmg) * (isDevMode ? devPowerMult : 1);
 
-                        closest.hp -= finalTpDmg;
-                        closest.hasBeenAttacked = true;
-                        closest.damageFlashTimer = 12;
-                        spawnParticles(closest.centerX, closest.centerY, 15, ['#ff00ff', '#ffffff'], 5, 20, 3);
-                        sfxHit();
+                        let phasesDone = 0;
+                        let currentX = this.centerX;
+                        let currentY = this.centerY;
+                        let targetNPC = null;
                         
-                        // 1.4 seconds (84 frames) Invincibility
-                        this.invincible = true;
-                        this.invincibleTimer = Math.max(this.invincibleTimer, 84); 
+                        let allEnemies = [...npcs, ...enemyWizards];
 
-                        // 1.5 second cooldown (90 frames)
-                        this.teleportCooldown = 90;
+                        for (let p = 0; p < maxPhases; p++) {
+                            let closest = null;
+                            let minDist = Infinity;
+                            for (let i = 0; i < allEnemies.length; i++) {
+                                if (allEnemies[i].hp > 0) {
+                                    let d = Math.hypot(allEnemies[i].centerX - currentX, allEnemies[i].centerY - currentY);
+                                    if (d < minDist) { minDist = d; closest = allEnemies[i]; }
+                                }
+                            }
+
+                            if (!closest) break; 
+
+                            targetNPC = closest;
+                            if (closest.type === 'red_boss') closest.hp -= 1; // 1 Hit mathematically due to 200% life logic
+                            else closest.hp -= finalTpDmg;
+                            
+                            closest.hasBeenAttacked = true;
+                            closest.damageFlashTimer = 12;
+                            spawnParticles(closest.centerX, closest.centerY, 15, ['#ff00ff', '#ffffff'], 5, 20, 3);
+                            sfxHit();
+
+                            let isLeftOfEnemy = currentX < closest.centerX;
+                            let offsetX = isLeftOfEnemy ? closest.width/2 + this.width/2 + 10 : -(closest.width/2 + this.width/2 + 10); 
+                            currentX = closest.centerX + offsetX;
+                            currentY = closest.centerY;
+
+                            phasesDone++;
+                        }
+
+                        if (phasesDone > 0 && targetNPC) {
+                            let isLeftOfEnemy = this.centerX < targetNPC.centerX;
+                            let offsetX = isLeftOfEnemy ? targetNPC.width/2 + this.width/2 + 10 : -(targetNPC.width/2 + this.width/2 + 10); 
+                            let targetX = targetNPC.centerX + offsetX - this.width / 2;
+                            
+                            targetX = Math.max(targetNPC.platform.left, Math.min(targetNPC.platform.right - this.width, targetX));
+                            
+                            this.x = targetX;
+                            this.y = targetNPC.platform.top - this.height;
+
+                            if (this.x < 0) this.x = 0;
+                            if (this.x + this.width > WORLD_WIDTH) this.x = WORLD_WIDTH - this.width;
+
+                            this.vy = 0;
+                            this.isGrounded = true;
+                            
+                            this.invincible = true;
+                            this.invincibleTimer = Math.max(this.invincibleTimer, 84); 
+                            this.teleportCooldown = 90;
+                            
+                            sfxTeleport();
+                            spawnParticles(this.centerX, this.centerY, 30, ['#aa00ff', '#ff00ff', '#ffffff'], 6, 25, 4);
+                            this.facingRight = this.centerX < targetNPC.centerX;
+                        }
+
                         this.teleportChargeFrames = 0;
-
-                        sfxTeleport();
-                        spawnParticles(this.centerX, this.centerY, 30, ['#aa00ff', '#ff00ff', '#ffffff'], 6, 25, 4);
-                        
-                        this.facingRight = this.centerX < closest.centerX;
                     }
 
                     if (!currentTeleportPressed) this.teleportChargeFrames = 0;
                     this.wasTeleportInput = currentTeleportPressed;
                     // --- END TELEPORT ---
+
+                    // --- SUMMON LOGIC ---
+                    if (currentSummonPressed && (level >= 15 || isDevMode) && this.summonCooldown <= 0) {
+                        this.summonChargeFrames++;
+                        if (this.summonChargeFrames % 20 === 0) sfxLightningCharge(this.summonChargeFrames);
+                    } 
+                    else if (!currentSummonPressed && this.wasSummonInput && this.summonChargeFrames > 0 && this.summonCooldown <= 0) {
+                        
+                        let helpersToSpawn = 1;
+                        if (this.summonChargeFrames >= 120) helpersToSpawn = 3;
+                        else if (this.summonChargeFrames >= 60) helpersToSpawn = 2;
+
+                        for (let i = 0; i < helpersToSpawn; i++) {
+                            let spawnX = this.centerX + (Math.random() * 60 - 30);
+                            helpers.push(new Helper(spawnX, this.y - 20, 15));
+                        }
+
+                        spawnParticles(this.centerX, this.centerY, 40, ['#4d9e5b', '#b8ffc9', '#ffffff'], 6, 25, 4);
+                        sfxCollectLife(); 
+                        
+                        this.summonCooldown = 360;
+                        this.summonChargeFrames = 0;
+                    }
+
+                    if (!currentSummonPressed) this.summonChargeFrames = 0;
+                    this.wasSummonInput = currentSummonPressed;
+                    // --- END SUMMON ---
 
                     if (currentJumpPressed && (this.isGrounded || this.coyoteTimer > 0)) {
                         this.jumpChargeFrames++;
@@ -1478,11 +1859,11 @@
                 respawn() {
                     this.x = 60; this.y = 350; this.vy = -6;
                     this.jumpChargeFrames = 0; this.fireChargeFrames = 0; this.lightningChargeFrames = 0;
-                    this.invincible = true; this.invincibleTimer = 80; this.attackCooldown = 0; this.teleportCooldown = 0;
+                    this.invincible = true; this.invincibleTimer = 80; this.attackCooldown = 0; this.teleportCooldown = 0; this.summonCooldown = 0;
                 }
                 
                 takeDamage(forceDeath = false) {
-                    if (isDevMode) return false; // Immortality in Dev Mode applies to ALL damage types
+                    if (isDevMode) return false; 
                     if (this.invincible && !forceDeath) return false;
                     
                     playerHealth = forceDeath ? 0 : playerHealth - 1;
@@ -1555,22 +1936,25 @@
                     } else if (this.teleportChargeFrames > 0) {
                         flashColor = '#aa00ff';
                         flashAlpha = Math.abs(Math.sin(this.teleportChargeFrames * 0.15)) * 0.5 + 0.2;
+                    } else if (this.summonChargeFrames > 0) {
+                        flashColor = '#4d9e5b';
+                        flashAlpha = Math.abs(Math.sin(this.summonChargeFrames * 0.15)) * 0.5 + 0.2;
                     }
 
                     drawEntityWithFlash(ctx, cx, bottom + walkBob, facingRight, 1, (sCtx) => {
                         sCtx.fillStyle = '#3d2b1a';
                         const footOffset = this.vx !== 0 && this.isGrounded ? Math.sin(this.animTimer * 0.3) * 2 : 0;
-                        sCtx.fillRect(-this.width / 2, -12, 9, 12);
-                        sCtx.fillRect(this.width / 2 - 9, -12 + footOffset, 9, 12);
+                        sCtx.fillRect(-14, -12, 9, 12);
+                        sCtx.fillRect(5, -12 + footOffset, 9, 12);
 
                         const bodyGrad = sCtx.createLinearGradient(0, -28, 0, -8);
                         bodyGrad.addColorStop(0, '#5b4d9e'); bodyGrad.addColorStop(0.4, '#4a3c8c'); bodyGrad.addColorStop(1, '#2d1f5e');
                         sCtx.fillStyle = bodyGrad;
-                        sCtx.fillRect(-this.width / 2 + 1, -28, this.width - 2, 20);
+                        sCtx.fillRect(-13, -28, 26, 20);
 
-                        sCtx.fillStyle = '#6e5fc0'; sCtx.fillRect(-this.width / 2 + 1, -28, this.width - 2, 3);
+                        sCtx.fillStyle = '#6e5fc0'; sCtx.fillRect(-13, -28, 26, 3);
                         sCtx.fillStyle = '#c9b8ff'; sCtx.fillRect(-2, -18, 4, 10);
-                        sCtx.fillStyle = '#8b6914'; sCtx.fillRect(-this.width / 2 + 1, -12, this.width - 2, 4);
+                        sCtx.fillStyle = '#8b6914'; sCtx.fillRect(-13, -12, 26, 4);
                         sCtx.fillStyle = '#d4a830'; sCtx.fillRect(-3, -13, 6, 6);
 
                         const headY = -32; const headR = 9;
@@ -1605,7 +1989,7 @@
                         sCtx.fillStyle = '#ccc';
                         sCtx.beginPath(); sCtx.arc(0, headY + 5, 7, 0.3, Math.PI - 0.3); sCtx.fill();
 
-                        const staffX = this.width / 2 - 1;
+                        const staffX = 13;
                         const staffTop = headY - 10;
                         const staffBottom = -2;
                         sCtx.strokeStyle = '#5c3d1a'; sCtx.lineWidth = 3;
@@ -1647,7 +2031,7 @@
             }
 
             function generateLevel(lvl) {
-                platforms = []; npcs = []; projectiles = []; bossProjectiles = []; particles = []; items = []; helpers = [];
+                platforms = []; npcs = []; projectiles = []; bossProjectiles = []; particles = []; items = []; helpers = []; enemyWizards = [];
                 playerHealth = Math.min(playerHealth + 1, maxHealth); 
                 gameState = STATE.PLAYING;
                 levelTransitionTimer = 0; gameOverTimer = 0; shakeTimer = 0; shakeIntensity = 0;
@@ -1664,6 +2048,12 @@
                 const instTeleport = document.getElementById('inst-teleport-wrapper');
                 if (instTeleport) instTeleport.style.display = (level >= 5 || isDevMode) ? 'inline' : 'none';
 
+                const summonBtn = document.getElementById('btn-summon');
+                if (summonBtn) summonBtn.style.display = (level >= 15 || isDevMode) ? 'flex' : 'none';
+                
+                const instSummon = document.getElementById('inst-summon-wrapper');
+                if (instSummon) instSummon.style.display = (level >= 15 || isDevMode) ? 'inline' : 'none';
+
                 const difficulty = lvl;
                 const numElevatedPlatforms = Math.min(15 + Math.floor(difficulty * 3), 60);
                 
@@ -1671,95 +2061,102 @@
                 const ground = new Platform(-10, groundY, WORLD_WIDTH + 20, 60);
                 platforms.push(ground);
 
-                for (let i = 0; i < numElevatedPlatforms; i++) {
-                    let placed = false; let attempts = 0;
-                    while (!placed && attempts < 300) { 
-                        const parent = platforms[Math.floor(Math.random() * platforms.length)];
-                        const dirX = Math.random() < 0.5 ? -1 : 1;
-                        
-                        let x, y, w = 80 + Math.random() * 120;
-                        
-                        if (parent === ground) {
-                            x = Math.random() * (WORLD_WIDTH - w - 20) + 10;
-                            y = groundY - 60 - Math.random() * 150; 
-                        } else {
-                            const offsetX = (Math.random() * 120 + 80) * dirX; 
-                            const offsetY = (Math.random() * 200) - 100; 
-                            x = parent.x + offsetX; 
-                            y = parent.top - offsetY;
+                // Level 20 Final Arena Override
+                if (level === 20) {
+                    const centerPlat = new Platform(GAME_WIDTH, groundY - 100, 300, 16);
+                    platforms.push(centerPlat);
+                    platforms.push(new Platform(GAME_WIDTH - 200, groundY - 200, 150, 16));
+                    platforms.push(new Platform(GAME_WIDTH + 350, groundY - 200, 150, 16));
+                    
+                    enemyWizards.push(new EnemyWizard(GAME_WIDTH + 150, groundY - 40, ground, 'red_boss'));
+                    npcsRemaining = 1;
+                } else {
+                    for (let i = 0; i < numElevatedPlatforms; i++) {
+                        let placed = false; let attempts = 0;
+                        while (!placed && attempts < 300) { 
+                            const parent = platforms[Math.floor(Math.random() * platforms.length)];
+                            const dirX = Math.random() < 0.5 ? -1 : 1;
+                            
+                            let x, y, w = 80 + Math.random() * 120;
+                            
+                            if (parent === ground) {
+                                x = Math.random() * (WORLD_WIDTH - w - 20) + 10;
+                                y = groundY - 60 - Math.random() * 150; 
+                            } else {
+                                const offsetX = (Math.random() * 120 + 80) * dirX; 
+                                const offsetY = (Math.random() * 200) - 100; 
+                                x = parent.x + offsetX; 
+                                y = parent.top - offsetY;
+                            }
+
+                            if (x < 10) x = 10; if (x + w > WORLD_WIDTH - 10) x = WORLD_WIDTH - w - 10;
+                            if (y > groundY - 60) y = groundY - 60; if (y < 80) y = 80;
+
+                            const newPlat = new Platform(x, y, w, 16); let isValid = true;
+
+                            for (const plat of platforms) {
+                                const isHorizOverlap = newPlat.left < plat.right + 50 && newPlat.right > plat.left - 50;
+                                const isVertOverlap = newPlat.top < plat.bottom + 70 && newPlat.bottom > plat.top - 70;
+                                if (isHorizOverlap && isVertOverlap) { isValid = false; break; }
+                            }
+                            if (isValid && !canReach(parent, newPlat) && !canReach(newPlat, parent)) isValid = false;
+                            if (isValid) { platforms.push(newPlat); placed = true; }
+                            attempts++;
                         }
-
-                        if (x < 10) x = 10; if (x + w > WORLD_WIDTH - 10) x = WORLD_WIDTH - w - 10;
-                        if (y > groundY - 60) y = groundY - 60; if (y < 80) y = 80;
-
-                        const newPlat = new Platform(x, y, w, 16); let isValid = true;
-
-                        for (const plat of platforms) {
-                            const isHorizOverlap = newPlat.left < plat.right + 50 && newPlat.right > plat.left - 50;
-                            const isVertOverlap = newPlat.top < plat.bottom + 70 && newPlat.bottom > plat.top - 70;
-                            if (isHorizOverlap && isVertOverlap) { isValid = false; break; }
-                        }
-                        if (isValid && !canReach(parent, newPlat) && !canReach(newPlat, parent)) isValid = false;
-                        if (isValid) { platforms.push(newPlat); placed = true; }
-                        attempts++;
                     }
-                }
 
-                let reachableSet = new Set(); reachableSet.add(platforms[0]); let queue = [platforms[0]];
-                while(queue.length > 0) {
-                    let curr = queue.shift();
-                    for (let p of platforms) {
-                        if (!reachableSet.has(p)) {
-                            if (canReach(curr, p) || canReach(p, curr)) { reachableSet.add(p); queue.push(p); }
+                    let reachableSet = new Set(); reachableSet.add(platforms[0]); let queue = [platforms[0]];
+                    while(queue.length > 0) {
+                        let curr = queue.shift();
+                        for (let p of platforms) {
+                            if (!reachableSet.has(p)) {
+                                if (canReach(curr, p) || canReach(p, curr)) { reachableSet.add(p); queue.push(p); }
+                            }
                         }
                     }
-                }
-                platforms = platforms.filter(p => reachableSet.has(p));
+                    platforms = platforms.filter(p => reachableSet.has(p));
 
-                const isBossLevel = level % 10 === 0;
-                const npcCount = Math.min(3 + Math.floor(difficulty * 1.5), 35);
-                
-                // REDUCED BASE NPC SPEED
-                const npcSpeed = 0.3 + difficulty * 0.1;
-                const cappedNpcSpeed = Math.min(npcSpeed, 2.5);
-                
-                const requiredHits = Math.ceil(7 * Math.pow(1.98329, level - 1));
+                    const isBossLevel = level === 10; 
+                    const npcCount = Math.min(3 + Math.floor(difficulty * 1.5), 35);
+                    const npcSpeed = 0.8 + difficulty * 0.25;
+                    const cappedNpcSpeed = Math.min(npcSpeed, 5.5);
+                    const requiredHits = Math.ceil(7 * Math.pow(1.98329, level - 1));
 
-                const shuffledPlatforms = [...platforms].sort(() => Math.random() - 0.5);
-                let npcsToPlace = npcCount;
-                let bossPlaced = false;
-                
-                if (isBossLevel) {
-                    const nx = ground.left + GAME_WIDTH / 2;
-                    const ny = ground.top - 34 * 4;
-                    npcs.push(new NPC(nx, ny, ground, cappedNpcSpeed * 0.7, requiredHits * 15, true));
-                    bossPlaced = true;
-                    npcsToPlace--;
-                }
-
-                for (const plat of shuffledPlatforms) {
-                    if (npcsToPlace <= 0) break;
-                    if (plat === ground && Math.random() > 0.5) continue;
-
-                    const npcsOnThisPlat = plat.width > 100 ? Math.min(npcsToPlace, 1 + Math.floor(Math.random() * 2)) : 1;
-                    for (let n = 0; n < npcsOnThisPlat && npcsToPlace > 0; n++) {
-                        const nx = plat.left + 10 + Math.random() * (plat.width - 40); const ny = plat.top - 34;
-                        npcs.push(new NPC(nx, ny, plat, cappedNpcSpeed + Math.random() * 1.5, requiredHits));
+                    const shuffledPlatforms = [...platforms].sort(() => Math.random() - 0.5);
+                    let npcsToPlace = npcCount;
+                    let bossPlaced = false;
+                    
+                    if (isBossLevel) {
+                        const nx = ground.left + GAME_WIDTH / 2;
+                        const ny = ground.top - 34 * 4;
+                        npcs.push(new NPC(nx, ny, ground, cappedNpcSpeed * 0.7, requiredHits * 15, true));
+                        bossPlaced = true;
                         npcsToPlace--;
                     }
-                }
 
-                while (npcsToPlace > 0) {
-                    const nx = ground.left + 50 + Math.random() * (ground.width - 100);
-                    const ny = ground.top - 34;
-                    npcs.push(new NPC(nx, ny, ground, cappedNpcSpeed + Math.random() * 1.5, requiredHits));
-                    npcsToPlace--;
-                }
+                    for (const plat of shuffledPlatforms) {
+                        if (npcsToPlace <= 0) break;
+                        if (plat === ground && Math.random() > 0.5) continue;
 
-                npcsRemaining = npcs.length;
+                        const npcsOnThisPlat = plat.width > 100 ? Math.min(npcsToPlace, 1 + Math.floor(Math.random() * 2)) : 1;
+                        for (let n = 0; n < npcsOnThisPlat && npcsToPlace > 0; n++) {
+                            const nx = plat.left + 10 + Math.random() * (plat.width - 40); const ny = plat.top - 34;
+                            npcs.push(new NPC(nx, ny, plat, cappedNpcSpeed + Math.random() * 1.5, requiredHits));
+                            npcsToPlace--;
+                        }
+                    }
+
+                    while (npcsToPlace > 0) {
+                        const nx = ground.left + 50 + Math.random() * (ground.width - 100);
+                        const ny = ground.top - 34;
+                        npcs.push(new NPC(nx, ny, ground, cappedNpcSpeed + Math.random() * 1.5, requiredHits));
+                        npcsToPlace--;
+                    }
+                    npcsRemaining = npcs.length;
+                }
 
                 if (!player) player = new Player(80, groundY - 40);
-                else { player.x = 80; player.y = groundY - 40; player.vy = 0; player.vx = 0; player.isGrounded = true; player.invincible = true; player.invincibleTimer = 60; player.attackCooldown = 0; player.jumpChargeFrames = 0; player.fireChargeFrames = 0; player.lightningChargeFrames = 0; player.teleportChargeFrames = 0; player.teleportCooldown = 0; }
+                else { player.x = 80; player.y = groundY - 40; player.vy = 0; player.vx = 0; player.isGrounded = true; player.invincible = true; player.invincibleTimer = 60; player.attackCooldown = 0; player.jumpChargeFrames = 0; player.fireChargeFrames = 0; player.lightningChargeFrames = 0; player.teleportChargeFrames = 0; player.teleportCooldown = 0; player.summonCooldown = 0; player.summonChargeFrames = 0; }
             }
 
             // ─────────────────────────────────────
@@ -1771,21 +2168,17 @@
                 ctx.fillStyle = skyGrad; 
                 ctx.fillRect(cameraX, 0, GAME_WIDTH, GAME_HEIGHT);
 
-                // REDESIGNED PARALLAX - STARS (Fixed and blinking)
                 const now = Date.now();
                 ctx.fillStyle = '#ffffff';
                 for (const star of stars) {
                     const sx = cameraX + star.x; 
                     const sy = star.y;
-                    
                     const alpha = star.baseAlpha + Math.sin(now * star.blinkSpeed + star.offset) * 0.3;
-                    
                     ctx.globalAlpha = Math.max(0.1, Math.min(1, alpha)); 
                     ctx.beginPath(); ctx.arc(sx, sy, star.r, 0, Math.PI * 2); ctx.fill();
                 }
                 ctx.globalAlpha = 1;
 
-                // REDESIGNED PARALLAX - MOUNTAINS (Very slow movement)
                 ctx.fillStyle = '#1e2240'; 
                 const parallax1 = cameraX * 0.85; 
                 const startX1 = Math.floor(cameraX / 5) * 5;
@@ -1805,15 +2198,13 @@
                 ctx.beginPath(); ctx.moveTo(startX2, GAME_HEIGHT);
                 for (let x = startX2; x <= endX2; x += 4) {
                     const px = x - parallax2;
-                    const y = 400 + Math.sin(px * 0.006 + 1) * 50 + Math.sin(px * 0.015) * 35 + Math.sin(px * 0.03 + 3) * 20; 
+                    const y = 400 + Math.sin(x * 0.006 + 1) * 50 + Math.sin(x * 0.015) * 35 + Math.sin(x * 0.03 + 3) * 20; 
                     ctx.lineTo(x, y);
                 }
                 ctx.lineTo(endX2, GAME_HEIGHT); ctx.fill();
 
-                // REDESIGNED PARALLAX - CLOUDS (Independent infinite loop)
                 ctx.fillStyle = 'rgba(200,210,230,0.25)';
                 for (const cloud of clouds) {
-                    // Only draw if visible on camera
                     if (cloud.x > cameraX - 100 && cloud.x < cameraX + GAME_WIDTH + 100) {
                         const cx = cloud.x; const cy = cloud.y; const s = cloud.s;
                         ctx.beginPath(); ctx.arc(cx, cy, 25 * s, 0, Math.PI * 2); ctx.arc(cx + 20 * s, cy - 8 * s, 20 * s, 0, Math.PI * 2);
@@ -1849,13 +2240,22 @@
                 ctx.fillText(`Lives: ${playerLives}`, 15, 78);
 
                 if (player) {
-                    if (player.teleportCooldown > 0 && level >= 5) {
+                    if (player.teleportCooldown > 0 && (level >= 5 || isDevMode)) {
                         const tpPercent = player.teleportCooldown / 90;
                         const cdX = GAME_WIDTH - 80; const cdY = 70;
                         ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(cdX, cdY, 60, 6);
                         ctx.fillStyle = '#aa00ff'; ctx.fillRect(cdX, cdY, 60 * (1 - tpPercent), 6);
                         ctx.fillStyle = '#fff'; ctx.font = '10px "Segoe UI", system-ui, sans-serif'; ctx.textAlign = 'right';
                         ctx.fillText('TP CD', cdX - 4, cdY + 6);
+                    }
+
+                    if (player.summonCooldown > 0 && (level >= 15 || isDevMode)) {
+                        const smPercent = player.summonCooldown / 360;
+                        const cdX = GAME_WIDTH - 80; const cdY = 85;
+                        ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(cdX, cdY, 60, 6);
+                        ctx.fillStyle = '#4d9e5b'; ctx.fillRect(cdX, cdY, 60 * (1 - smPercent), 6);
+                        ctx.fillStyle = '#fff'; ctx.font = '10px "Segoe UI", system-ui, sans-serif'; ctx.textAlign = 'right';
+                        ctx.fillText('SM CD', cdX - 4, cdY + 6);
                     }
 
                     if (player.attackCooldown > 0) {
@@ -1867,7 +2267,7 @@
                         ctx.fillText('CD', cdX - 4, cdY + 6);
                     }
                     
-                    const chargeFrames = Math.max(player.fireChargeFrames, player.lightningChargeFrames, player.teleportChargeFrames);
+                    const chargeFrames = Math.max(player.fireChargeFrames, player.lightningChargeFrames, player.teleportChargeFrames, player.summonChargeFrames);
                     if (chargeFrames > 0) {
                         const maxBarFrames = 180;
                         const p = Math.min(1, chargeFrames / maxBarFrames);
@@ -1875,6 +2275,7 @@
                         ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(cdX, cdY, 50, 6);
                         
                         if (player.teleportChargeFrames > 0) ctx.fillStyle = '#aa00ff';
+                        else if (player.summonChargeFrames > 0) ctx.fillStyle = '#4d9e5b';
                         else if (player.lightningChargeFrames > 0) ctx.fillStyle = '#00ffff';
                         else ctx.fillStyle = '#ffaa00'; 
                         
@@ -1894,7 +2295,8 @@
 
                     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(15, 95, 175, 20);
                     let label = "READY"; let color = "#fff";
-                    if (player.teleportChargeFrames > 0) { label = "CHARGING TELEPORT"; color = "#aa00ff"; }
+                    if (player.summonChargeFrames > 0) { label = "CHARGING SUMMON"; color = "#4d9e5b"; }
+                    else if (player.teleportChargeFrames > 0) { label = "CHARGING TELEPORT"; color = "#aa00ff"; }
                     else if (player.lightningChargeFrames > 0) { label = "CHARGING LIGHTNING"; color = "#00ffff"; }
                     else if (player.fireChargeFrames > 0) { label = "CHARGING FIRE"; color = "#ffaa00"; }
                     
@@ -1924,9 +2326,9 @@
             function drawVictory(ctx) {
                 ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
                 ctx.fillStyle = '#00ffff'; ctx.font = 'bold 36px "Segoe UI", "Press Start 2P", system-ui, sans-serif'; ctx.textAlign = 'center';
-                ctx.fillText('🌟 YOU SAVED THE REALM! 🌟', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20);
+                ctx.fillText('🌟 Congratulations, you freed the humans realm from the demons invasion 🌟', GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20);
                 ctx.fillStyle = '#fff'; ctx.font = '18px "Segoe UI", system-ui, sans-serif';
-                ctx.fillText(`Final Level: ${level}  |  Total Score: ${score}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 30);
+                ctx.fillText(`Final Score: ${score}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 30);
                 ctx.fillStyle = '#ff9f43';
                 ctx.fillText('Tap or press SPACE to return to Menu', GAME_WIDTH / 2, GAME_HEIGHT / 2 + 75);
             }
@@ -1935,8 +2337,13 @@
             // MAIN GAME LOOP
             // ─────────────────────────────────────
             function update() {
-                if (gameState === STATE.MENU || gameState === STATE.STORY) {
+                if (gameState === STATE.MENU || gameState === STATE.STORY || gameState === STATE.STORY_LEVEL_20) {
                     return;
+                }
+
+                for (let c of clouds) {
+                    c.x -= c.speed;
+                    if (c.x < -200) c.x = WORLD_WIDTH + 200;
                 }
 
                 if (gameState === STATE.GAME_OVER || gameState === STATE.VICTORY) {
@@ -1955,7 +2362,10 @@
                     if (shakeTimer > 0) shakeTimer--;
                     if (levelTransitionTimer <= 0) {
                         level++; 
-                        if (level > 100 && !isDevMode) {
+                        if (level === 20) {
+                            gameState = STATE.STORY_LEVEL_20;
+                            document.getElementById('level20-overlay').style.display = 'flex';
+                        } else if (level > 20 && !isDevMode) {
                             gameState = STATE.VICTORY;
                             gameOverTimer = 180;
                             sfxLevelUp();
@@ -1970,11 +2380,9 @@
                 player.update(platforms);
 
                 if (!isTimeFrozen) {
-                    // Update Helpers
                     for (let i = helpers.length - 1; i >= 0; i--) {
-                        helpers[i].update(platforms, npcs);
+                        helpers[i].update(platforms, npcs, enemyWizards);
                         
-                        // Collision with Boss Projectiles
                         for (let b = 0; b < bossProjectiles.length; b++) {
                             if (!helpers[i].invincible) { 
                                 const hB = helpers[i].getBounds(); const bB = bossProjectiles[b].getBounds();
@@ -1984,10 +2392,10 @@
                             }
                         }
 
-                        // Collision with Demons
                         if (!helpers[i].invincible) {
                             const hBounds = helpers[i].getBounds();
-                            for (const npc of npcs) {
+                            let allEnemies = [...npcs, ...enemyWizards];
+                            for (const npc of allEnemies) {
                                 const nBounds = npc.getBounds();
                                 if (hBounds.left < nBounds.right && hBounds.right > nBounds.left && hBounds.top < nBounds.bottom && hBounds.bottom > nBounds.top) {
                                     helpers[i].takeDamage(1);
@@ -2018,53 +2426,84 @@
                     }
 
                     for (const npc of npcs) npc.update(player);
+                    for (const ew of enemyWizards) ew.update(platforms, player);
 
-                // PROJECTILE & NPC COLLISION
-                for (let f = projectiles.length - 1; f >= 0; f--) {
-                    const proj = projectiles[f];
+                    // PROJECTILE COLLISION
+                    for (let f = projectiles.length - 1; f >= 0; f--) {
+                        const proj = projectiles[f];
                         const projBounds = proj.getBounds();
                         let projectileDead = false;
 
-                        for (let n = npcs.length - 1; n >= 0; n--) {
-                            const npc = npcs[n];
-                            if (proj.hitNPCs.has(npc)) continue;
-
-                            const npcBounds = npc.getBounds();
-                            if (projBounds.left < npcBounds.right && projBounds.right > npcBounds.left && projBounds.top < npcBounds.bottom && projBounds.bottom > npcBounds.top) {
-                                
-                                npc.hp -= proj.damage;
-                                proj.hitNPCs.add(npc);
-                                proj.pierceRemaining--;
-                                
-                                if (npc.hp <= 0) {
-                                    totalDemonsKilled++;
-
-                                    const pCount = Math.min(100, 15 + proj.radius);
-                                    spawnParticles(npc.centerX, npc.centerY, pCount, ['#ff6b35', '#ff9f43', '#ffcc02', '#ffffff', '#ff4400'], 4 + proj.radius/10, 35, 3 + proj.radius/15);
-                                    spawnParticles(npc.centerX, npc.centerY, 8, ['#ff0000', '#ff4444'], 4, 20, 3);
-                                    
-                                    if (totalDemonsKilled % 10 === 0) {
-                                        items.push(new Item(npc.centerX - 8, npc.centerY, 'life')); 
-                                    } else if (totalDemonsKilled % 2 === 0) {
-                                        items.push(new Item(npc.centerX - 8, npc.centerY, 'heart')); 
+                        if (proj.isEnemy) {
+                            // Enemy Projectile hits Player
+                            if (!player.invincible && projBounds.left < player.getBounds().right && projBounds.right > player.getBounds().left && projBounds.top < player.getBounds().bottom && projBounds.bottom > player.getBounds().top) {
+                                player.takeDamage();
+                                projectiles.splice(f, 1);
+                                projectileDead = true;
+                            }
+                            
+                            // Enemy Projectile hits Helpers
+                            if (!projectileDead) {
+                                for (let h of helpers) {
+                                    if (!h.invincible && projBounds.left < h.getBounds().right && projBounds.right > h.getBounds().left && projBounds.top < h.getBounds().bottom && projBounds.bottom > h.getBounds().top) {
+                                        h.takeDamage(proj.damage);
+                                        projectiles.splice(f, 1);
+                                        projectileDead = true;
+                                        break;
                                     }
-
-                                    npcs.splice(n, 1);
-                                    score += (npc.isBoss ? 1000 : 100) + level * 10; 
-                                    npcsRemaining = npcs.length;
-                                    shakeTimer = 8 + Math.min(20, proj.radius/4); 
-                                    shakeIntensity = 4 + Math.min(10, proj.radius/10); 
-                                    sfxHit(); 
-                                } else {
-                                    npc.damageFlashTimer = 12;
-                                    spawnParticles(npc.centerX, npc.centerY, 8, ['#ff0000', '#ff4444', '#fff'], 4, 15, 2);
-                                    sfxHit();
                                 }
-                                
-                                if (proj.pierceRemaining <= 0) {
-                                    projectiles.splice(f, 1);
-                                    projectileDead = true;
-                                    break;
+                            }
+                        } else {
+                            // Player Projectile hits NPCs
+                            let targetHitList = [...npcs, ...enemyWizards];
+                            for (let n = targetHitList.length - 1; n >= 0; n--) {
+                                const npc = targetHitList[n];
+                                if (proj.hitNPCs.has(npc)) continue;
+
+                                const npcBounds = npc.getBounds();
+                                if (projBounds.left < npcBounds.right && projBounds.right > npcBounds.left && projBounds.top < npcBounds.bottom && projBounds.bottom > npcBounds.top) {
+                                    
+                                    if (npc.type === 'red_boss') npc.hp -= 1; // Exactly 1 damage mathematically (10 hits)
+                                    else npc.hp -= proj.damage;
+                                    
+                                    proj.hitNPCs.add(npc);
+                                    proj.pierceRemaining--;
+                                    
+                                    if (npc.hp <= 0) {
+                                        totalDemonsKilled++;
+                                        const pCount = Math.min(100, 15 + proj.radius);
+                                        spawnParticles(npc.centerX, npc.centerY, pCount, ['#ff6b35', '#ff9f43', '#ffcc02', '#ffffff', '#ff4400'], 4 + proj.radius/10, 35, 3 + proj.radius/15);
+                                        spawnParticles(npc.centerX, npc.centerY, 8, ['#ff0000', '#ff4444'], 4, 20, 3);
+                                        
+                                        if (totalDemonsKilled % 10 === 0) {
+                                            items.push(new Item(npc.centerX - 8, npc.centerY, 'life')); 
+                                        } else if (totalDemonsKilled % 2 === 0) {
+                                            items.push(new Item(npc.centerX - 8, npc.centerY, 'heart')); 
+                                        }
+
+                                        let indexInNpcs = npcs.indexOf(npc);
+                                        if (indexInNpcs > -1) npcs.splice(indexInNpcs, 1);
+                                        else {
+                                            let indexInEw = enemyWizards.indexOf(npc);
+                                            if (indexInEw > -1) enemyWizards.splice(indexInEw, 1);
+                                        }
+
+                                        score += (npc.isBoss ? 5000 : 100) + level * 10; 
+                                        npcsRemaining = npcs.length + enemyWizards.length;
+                                        shakeTimer = 8 + Math.min(20, proj.radius/4); 
+                                        shakeIntensity = 4 + Math.min(10, proj.radius/10); 
+                                        sfxHit(); 
+                                    } else {
+                                        npc.damageFlashTimer = 12;
+                                        spawnParticles(npc.centerX, npc.centerY, 8, ['#ffffff', '#ff4444', '#fff'], 4, 15, 2);
+                                        sfxHit();
+                                    }
+                                    
+                                    if (proj.pierceRemaining <= 0) {
+                                        projectiles.splice(f, 1);
+                                        projectileDead = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -2094,11 +2533,13 @@
                             items.splice(i, 1);
                         }
                     }
-                } // End of !isTimeFrozen
+
+                } // End !isTimeFrozen
 
                 if (!player.invincible) {
                     const pBounds = player.getBounds();
-                    for (const npc of npcs) {
+                    let allEnemies = [...npcs, ...enemyWizards];
+                    for (const npc of allEnemies) {
                         const nBounds = npc.getBounds();
                         if (pBounds.left < nBounds.right && pBounds.right > nBounds.left && pBounds.top < nBounds.bottom && pBounds.bottom > nBounds.top) {
                             if (player.takeDamage()) {
@@ -2109,25 +2550,34 @@
                     }
                 }
 
+                // Delete dead npcs marked from teleportation phase-through
                 for (let i = npcs.length - 1; i >= 0; i--) {
                     if (npcs[i].hp <= 0) {
                         const npc = npcs[i];
                         totalDemonsKilled++;
                         spawnParticles(npc.centerX, npc.centerY, 40, ['#aa00ff', '#ff00ff', '#ffffff', '#ff4400'], 8, 35, 5);
                         
-                        if (totalDemonsKilled % 10 === 0) {
-                            items.push(new Item(npc.centerX - 8, npc.centerY, 'life')); 
-                        } else if (totalDemonsKilled % 2 === 0) {
-                            items.push(new Item(npc.centerX - 8, npc.centerY, 'heart')); 
-                        }
+                        if (totalDemonsKilled % 10 === 0) items.push(new Item(npc.centerX - 8, npc.centerY, 'life')); 
+                        else if (totalDemonsKilled % 2 === 0) items.push(new Item(npc.centerX - 8, npc.centerY, 'heart')); 
 
                         npcs.splice(i, 1);
                         score += (npc.isBoss ? 1000 : 100) + level * 10; 
-                        npcsRemaining = npcs.length;
+                        npcsRemaining = npcs.length + enemyWizards.length;
+                    }
+                }
+                
+                for (let i = enemyWizards.length - 1; i >= 0; i--) {
+                    if (enemyWizards[i].hp <= 0) {
+                        const ew = enemyWizards[i];
+                        totalDemonsKilled++;
+                        spawnParticles(ew.centerX, ew.centerY, 40, ['#aa00ff', '#ff00ff', '#ffffff', '#ff4400'], 8, 35, 5);
+                        enemyWizards.splice(i, 1);
+                        score += (ew.isBoss ? 5000 : 200) + level * 10; 
+                        npcsRemaining = npcs.length + enemyWizards.length;
                     }
                 }
 
-                if (npcs.length === 0 && gameState === STATE.PLAYING) {
+                if (npcs.length === 0 && enemyWizards.length === 0 && gameState === STATE.PLAYING) {
                     if (!isDevMode || devAutoLevel) {
                         gameState = STATE.LEVEL_COMPLETE; levelTransitionTimer = 120; sfxLevelUp();
                         spawnParticles(player.centerX, player.centerY, 40, ['#ffd700', '#ffaa00', '#ffffff', '#ffff00', '#ff8800'], 10, 50, 7);
@@ -2142,7 +2592,7 @@
             function render() {
                 ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
                 
-                if (gameState === STATE.STORY) {
+                if (gameState === STATE.STORY || gameState === STATE.STORY_LEVEL_20 || gameState === STATE.MENU) {
                     drawBackground(ctx, 0);
                     return;
                 }
@@ -2168,6 +2618,7 @@
                 for (const item of items) item.draw(ctx);
                 for (const helper of helpers) helper.draw(ctx);
                 for (const npc of npcs) npc.draw(ctx);
+                for (const ew of enemyWizards) ew.draw(ctx);
                 for (const proj of projectiles) proj.draw(ctx);
                 for (const bp of bossProjectiles) bp.draw(ctx);
                 for (const p of particles) p.draw(ctx);
@@ -2184,7 +2635,7 @@
             function restartGame() {
                 level = 1; score = 0; totalDemonsKilled = 0;
                 playerHealth = maxHealth; playerLives = 5; player = null;
-                platforms = []; npcs = []; projectiles = []; bossProjectiles = []; particles = []; items = []; helpers = [];
+                platforms = []; npcs = []; enemyWizards = []; helpers = []; projectiles = []; bossProjectiles = []; particles = []; items = [];
                 gameState = STATE.PLAYING; levelTransitionTimer = 0; gameOverTimer = 0; shakeTimer = 0; shakeIntensity = 0;
                 generateLevel(1); initAudio();
             }
@@ -2194,7 +2645,6 @@
                 let deltaTime = timestamp - lastTime;
                 lastTime = timestamp;
                 
-                // Prevent death spiral if tab is inactive
                 if (deltaTime > 250) deltaTime = 250;
                 
                 accumulatedTime += deltaTime;
@@ -2208,23 +2658,21 @@
             }
 
             function init() {
-                // Initialize infinite scrolling clouds
                 clouds = [];
                 for(let i=0; i<15; i++) {
                     clouds.push({
                         x: Math.random() * (WORLD_WIDTH + GAME_WIDTH), 
                         y: 20 + Math.random() * 120, 
                         s: 0.6 + Math.random() * 0.8,
-                        speed: 0.2 + Math.random() * 0.5 // Independent drift speed
+                        speed: 0.2 + Math.random() * 0.5 
                     });
                 }
 
-                // Initialize random stars
                 stars = [];
                 for(let i=0; i<150; i++) {
                     stars.push({
                         x: Math.random() * GAME_WIDTH,
-                        y: Math.random() * (GAME_HEIGHT * 0.6), // Upper 60% of the sky
+                        y: Math.random() * (GAME_HEIGHT * 0.6), 
                         r: 0.5 + Math.random() * 1.5,
                         baseAlpha: 0.2 + Math.random() * 0.6,
                         blinkSpeed: 0.001 + Math.random() * 0.002,
@@ -2255,16 +2703,23 @@
                     gameState = STATE.PLAYING;
                     generateLevel(1);
                 });
+                
+                document.getElementById('btn-start-level20').addEventListener('click', () => {
+                    document.getElementById('level20-overlay').style.display = 'none';
+                    initAudio();
+                    generateLevel(20);
+                    gameState = STATE.PLAYING;
+                });
 
-                // Update default HP input based on selected entity type
                 document.getElementById('dev-type').addEventListener('change', (e) => {
                     const hpInput = document.getElementById('dev-hp');
                     if (e.target.value === 'boss') hpInput.value = 150;
                     else if (e.target.value === 'helper') hpInput.value = 15;
+                    else if (e.target.value === 'red_boss') hpInput.value = 10;
+                    else if (e.target.value === 'corrupted_helper') hpInput.value = 15;
                     else hpInput.value = 7;
                 });
 
-                // Spawn Enemy logic for Developer Mode
                 document.getElementById('btn-spawn').addEventListener('click', () => {
                     if (gameState !== STATE.PLAYING) return;
                     const hp = parseInt(document.getElementById('dev-hp').value) || 50;
@@ -2278,6 +2733,12 @@
                     
                     if (type === 'helper') {
                         helpers.push(new Helper(spawnX, groundPlat.top - 80, hp));
+                    } else if (type === 'red_boss' || type === 'corrupted_helper') {
+                        let ew = new EnemyWizard(spawnX, groundPlat.top - 80, groundPlat, type);
+                        ew.hp = hp;
+                        ew.maxHp = hp;
+                        enemyWizards.push(ew);
+                        npcsRemaining++;
                     } else {
                         const isBoss = type === 'boss';
                         npcs.push(new NPC(spawnX, groundPlat.top - (isBoss ? 150 : 80), groundPlat, 2, hp, isBoss));
@@ -2289,6 +2750,7 @@
                     if (gameState !== STATE.PLAYING) return;
                     npcs.forEach(n => n.hp = 0);
                     helpers.forEach(h => h.hp = 0);
+                    enemyWizards.forEach(ew => ew.hp = 0);
                     projectiles = [];
                     bossProjectiles = [];
                 });
